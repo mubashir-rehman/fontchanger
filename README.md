@@ -27,8 +27,5 @@
 - All Android versions
 
 ## Credits
-- <a href="https://forum.xda-developers.com/android/themes/fonts-flashable-zips-t3219827">
-@giaton @xdadevelopers
-  </a>
-
+- <a href="https://forum.xda-developers.com/android/themes/fonts-flashable-zips-t3219827">@giaton @xdadevelopers</a>
 - @oldmid @xdadevelopers
