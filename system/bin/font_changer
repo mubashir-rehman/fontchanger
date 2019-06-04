@@ -354,7 +354,7 @@ read -r mchoice
 list_fonts() {
   num=0
   rm $MODPATH/fontlist.txt > /dev/null 2>&1
-  fonts=$(cat $FCDIR/fonts-list.txt | tr -d '.zip')
+  fonts=$(cat $FCDIR/fonts-list.txt | sed 's/.zip//')
   touch $MODPATH/fontlist.txt > /dev/null 2>&1
   for font in $fonts; do
     sleep 0.1
