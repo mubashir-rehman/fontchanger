@@ -138,7 +138,7 @@ on_install() {
 if $BOOTMODE; then
     test_connection
   if [ $? -eq 0 ]; then
-    mkdir -p /storage/emulated/0/Fontchanger/Fonts
+    mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom
     curl -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
     if [ -f /storage/emulated/0/Fontchanger/fonts-list.txt ]; then
       ui_print " [-] Font List Downloaded Successfully..."
