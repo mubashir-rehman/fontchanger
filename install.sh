@@ -134,13 +134,15 @@ on_install() {
   # Extend/change the logic to whatever you want
   ui_print "- Extracting module files"
   unzip -o "$ZIPFILE" 'system/*' -d $MODPATH >&2
+  chmod 0755 $TMPDIR/busybox-$ARCH32
   ui_print " [-] Checking For Internet Connection..."
 if $BOOTMODE; then
-    test_connection
+    test_connection3
   if [ $? -eq 0 ]; then
     rm /storage/emulated/0/Fontchanger/fonts-list.txt
     mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom
-    curl -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
+    chmod 0755 $TMPDIR/curl-$ARCH32
+    $TMPDIR/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
     if [ -f /storage/emulated/0/Fontchanger/fonts-list.txt ]; then
       ui_print " [-] Font List Downloaded Successfully..."
     else
@@ -152,7 +154,7 @@ if $BOOTMODE; then
 else
   cancel " [-] TWRP Install NOT Supported. Please Install Booted with Internet Connection... "
 fi
-  imageless magisk || sed -i "s|MODPATH=/data/adb/modules|MODPATH=/sbin/.magisk/img|" $MODPATH/system/bin/font_changer
+  imageless_magisk || sed -i "s|MODPATH=/data/adb/modules|MODPATH=/sbin/.magisk/img|" $MODPATH/system/bin/font_changer
   cp -f $TMPDIR/curl-$ARCH32 $MODPATH/curl
 }
 
@@ -187,5 +189,24 @@ cancel() {
 
 test_connection() {
   ui_print "Testing internet connection "
-  ping -q -c 1 -W 1 google.com >/dev/null 2>&1 && ui_print "- Internet Detected" || { cancel "Error, No Internet Connection"; false; }
+  $TMPDIR/busybox-$ARCH32 ping -q -c 1 -W 1 google.com >/dev/null 2>&1 && ui_print "- Internet Detected" || { cancel "Error, No Internet Connection"; false; }
+}
+
+test_connection2() {
+  case "$($TMPDIR/curl-$ARCH32 -s --max-time 2 -I http://google.com | sed 's/^[^ ]*  *\([0-9]\).*/\1/; 1q')" in
+  [23]) echo "HTTP connectivity is up";;
+  5) echo "The web proxy won't let us through" false;;
+  *) cancel "The network is down or very slow";;
+esac
+}
+
+test_connection3() {
+  $TMPDIR/busybox-$ARCH32 wget -q --tries=5 --timeout=10 http://www.google.com -O $TMPDIR/google.idx >/dev/null 2>&1
+if [ ! -s $TMPDIR/google.idx ]
+then
+    ui_print " [!] Not Connected..[!]"
+    false
+else
+    ui_print " [-] Connected..!"
+fi
 }
