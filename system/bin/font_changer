@@ -4,26 +4,20 @@
 # Modified by @JohnFawkes - Telegram
 # Help from @Zackptg5
 # Variables
-
-# Load magisk stuff
-if [ -f /data/adb/magisk/util_functions.sh ]; then
-  . /data/adb/magisk/util_functions.sh
-elif [ -f /data/magisk/util_functions.sh ]; then
-  . /data/magisk/util_functions.sh
-else
-  echo "! Can't find magisk util_functions! Aborting!"; exit 1
-fi
-
-# Variables
 OLDPATH=$PATH
 MODID=Fontchanger
 MODPATH=/data/adb/modules/$MODID
 MODPROP=$MODPATH/module.prop
-if [ -d /cache ]; then CACHELOC=/cache; else CACHELOC=/data/cache; fi       
 SDCARD=/storage/emulated/0
 FCDIR=$SDCARD/Fontchanger
+TMPLOG=FontChanger_logs.log
+TMPLOGLOC=$FCDIR/FontChanger_logs
+XZLOG=$FCDIR/Fontchanger_logs.tar.xz
+if [ -d /cache ]; then CACHELOC=/cache; else CACHELOC=/data/cache; fi       
 CFONT=$MODPATH/currentfont.txt
+MIRROR=/sbin/.magisk/mirror
 alias curl=$MODPATH/curl
+alias sleep=$MODPATH/sleep
 
 quit() {
   PATH=$OLDPATH
@@ -34,15 +28,24 @@ quit() {
 _name=$(basename $0)
 ls /data >/dev/null 2>&1 || { echo "$MODID needs to run as root!"; echo "type 'su' then '$_name'"; quit 1; }
 
+# Load magisk stuff
+if [ -f /data/adb/magisk/util_functions.sh ]; then
+  . /data/adb/magisk/util_functions.sh
+elif [ -f /data/magisk/util_functions.sh ]; then
+  . /data/magisk/util_functions.sh
+else
+  echo "! Can't find magisk util_functions! Aborting!"; exit 1
+fi
+
 #=========================== Set Log Files
-mount -o remount,rw $CACHELOC 2>/dev/null
-mount -o rw,remount $CACHELOC 2>/dev/null
+#mount -o remount,rw $CACHELOC 2>/dev/null
+#mount -o rw,remount $CACHELOC 2>/dev/null
 # > Logs should go in this file
-LOG=$CACHELOC/$MODID.log
-oldLOG=$CACHELOC/$MODID-old.log
+LOG=$MODPATH/$MODID.log
+oldLOG=$MODPATH/$MODID-old.log
 # > Verbose output goes here
-VERLOG=$CACHELOC/$MODID-verbose.log
-oldVERLOG=$CACHELOC/$MODID-verbose-old.log
+VERLOG=$MODPATH/$MODID-verbose.log
+oldVERLOG=$MODPATH/$MODID-verbose-old.log
 
 # Start Logging verbosely
 mv -f $VERLOG $oldVERLOG 2>/dev/null
@@ -59,19 +62,19 @@ elif [ -d /sbin/.magisk/busybox ]; then
   PATH=/sbin/.magisk/busybox:$PATH
   _bb=/sbin/.magisk/busybox/busybox
   BBox=true
-elif [ -d /data/magisk/busybox ]; then
-  PATH=/data/magisk/busybox:PATH
-  _bb=/data/magisk/busybox
-  BBox=true
 elif [ -d /data/adb/magisk/busybox ]; then
   PATH=/data/adb/magisk/busybox:PATH
   _bb=/data/adb/magisk/busybox
   BBox=true
+elif [ -d /data/magisk/busybox ]; then
+  PATH=/data/magisk/busybox:PATH
+  _bb=/data/magisk/busybox
+  BBox=true
 else
   BBox=false
   echo "! Busybox not detected" >> $LOG
- echo "Please install one (@osm0sis' busybox recommended)" >> $LOG
-  for applet in cat chmod cp curl grep md5sum mv ping printf sed sort tar tee tr unzip wget; do
+  echo "Please install one (@osm0sis' busybox recommended)" >> $LOG
+  for applet in cat chmod cp curl grep md5sum mv ping printf sed sleep sort tar tee tr unzip wget; do
     [ "$($applet)" ] || quit 1
   done
   echo "All required applets present, continuing" >> $LOG
@@ -149,11 +152,11 @@ abort() {
 }
 
 magisk_version() {
-  if grep MAGISK_VER /data/adb/magisk/util_functions.sh; then
+if grep MAGISK_VER /data/adb/magisk/util_functions.sh; then
   echo "$MAGISK_VERSION $MAGISK_VERSIONCODE" >> $LOG 2>&1
- else
+else
   echo "Magisk not installed" >> $LOG 2>&1
- fi
+fi
 }
 
 # Device Info
@@ -210,16 +213,68 @@ title_div() {
 
 # set_file_prop <property> <value> <prop.file>
 set_file_prop() {
-  if [ -f "$3" ]; then
-    if grep -q "$1=" "$3"; then
-      sed -i "s/${1}=.*/${1}=${2}/g" "$3"
-    else
-      echo "$1=$2" >> "$3"
-    fi
+if [ -f "$3" ]; then
+  if grep -q "$1=" "$3"; then
+    sed -i "s/${1}=.*/${1}=${2}/g" "$3"
   else
-    echo "$3 doesn't exist!"
+    echo "$1=$2" >> "$3"
   fi
+else
+  echo "$3 doesn't exist!"
+fi
 }
+
+# https://github.com/fearside/ProgressBar
+# ProgressBar <progress> <total>
+ProgressBar() {
+# Determine Screen Size
+  if [[ "$COLUMNS" -le "57" ]]; then
+    local var1=2
+	  local var2=20
+  else
+    local var1=4
+    local var2=40
+  fi
+# Process data
+  local _progress=$(((${1}*100/${2}*100)/100))
+  local _done=$(((${_progress}*${var1})/10))
+  local _left=$((${var2}-$_done))
+# Build progressbar string lengths
+  local _done=$(printf "%${_done}s")
+  local _left=$(printf "%${_left}s")
+
+# Build progressbar strings and print the ProgressBar line
+printf "\rProgress : ${BGBL}|${N}${_done// /${BGBL}$loadBar${N}}${_left// / }${BGBL}|${N} ${_progress}%%"
+}
+
+#https://github.com/fearside/SimpleProgressSpinner
+# Spinner <message>
+Spinner() {
+
+# Choose which character to show.
+case ${_indicator} in
+  "|") _indicator="/";;
+  "/") _indicator="-";;
+  "-") _indicator="\\";;
+  "\\") _indicator="|";;
+  # Initiate spinner character
+  *) _indicator="\\";;
+esac
+
+# Print simple progress spinner
+printf "\r${@} [${_indicator}]"
+}
+
+# cmd & spinner <message>
+e_spinner() {
+  PID=$!
+  h=0; anim='-\|/';
+  while [ -d /proc/$PID ]; do
+    h=$(((h+1)%4))
+    sleep 0.02
+    printf "\r${@} [${anim:$h:1}]"
+  done
+}                                                                       
 
 # test_connection
 # tests if there's internet connection
@@ -229,22 +284,38 @@ test_connection() {
 }
 
 test_connection2() {
-  case "$(curl -s --max-time 2 -I http://google.com | sed 's/^[^ ]*  *\([0-9]\).*/\1/; 1q')" in
-  [23]) echo "HTTP connectivity is up";;
-  5) echo "The web proxy won't let us through" false;;
-  *) abort "The network is down or very slow";;
+case "$(curl -s --max-time 2 -I http://google.com | sed 's/^[^ ]*  *\([0-9]\).*/\1/; 1q')" in
+  [23]) echo "HTTP connectivity is up"
+  ;;
+  5) echo "The web proxy won't let us through" 
+  false
+  ;;
+  *) abort "The network is down or very slow"
+  ;;
 esac
 }
 
 test_connection3() {
   wget -q --tries=5 --timeout=10 http://www.google.com -O $CACHELOC/google.idx >/dev/null 2>&1
-if [ ! -s $CACHELOC/google.idx ]
-then
-    ui_print " [!] Not Connected..[!]"
-    false
+if [ ! -s $CACHELOC/google.idx ]; then
+  ui_print " [!] Not Connected..[!]"
+  false
 else
-    ui_print " [-] Connected..!"
+  ui_print " [-] Connected..!"
 fi
+rm -f $CACHELOC/google.idx
+}
+
+# Log files will be uploaded to logs.pix3lify.com
+upload_logs() {
+  test_connection
+  [ $? -ne 0 ] && exit
+  logup=none;
+  echo "Uploading logs"
+  [ -s $XZLOG ] && logup=$(curl -T $XZLOG http://john-fawkes.com/submit)
+  echo "$MODEL ($DEVICE) API $API\n$ROM\n$ID\n
+  Log:   $logup"
+  exit
 }
 
 # Print Center
@@ -257,18 +328,22 @@ pcenter() {
   echo "$(printf '%*s' "${indent}" '') $@"
 }
 
+reboot(){
+  setprop sys.powerctl reboot
+}
+
 # Heading
 mod_head() {
- echo "$div"
- echo "${W}$MODTITLE $VER${N}(${Bl}$REL${N})"
- echo "by ${W}$AUTHOR${N}"
- echo "$div"
+  echo "$div"
+  echo "${W}$MODTITLE $VER${N}(${Bl}$REL${N})"
+  echo "by ${W}$AUTHOR${N}"
+  echo "$div"
   echo "${R}$BRAND${N},${R}$MODEL${N},${R}$ROM${N}"
   echo "$div"
- echo "${W}BUSYBOX VERSION = ${N}${R}$_bbname${N}${R}$BBV${N}"
- echo "$div"
- echo "${W}MAGISK VERSION = ${N}${R} $MAGISK_VERSION${N}" 
- echo "$div"
+  echo "${W}BUSYBOX VERSION = ${N}${R}$_bbname${N}${R}$BBV${N}"
+  echo "$div"
+  echo "${W}MAGISK VERSION = ${N}${R} $MAGISK_VERSION${N}" 
+  echo "$div"
   echo ""
 }
 
@@ -277,266 +352,210 @@ mod_head() {
 # > You can add functions, variables & etc.
 # > Rather than editing the default vars above.
 
-reboot(){
-  setprop sys.powerctl reboot
-}
+# Load Needed Functions
+if [ -f $MODPATH/functions.sh ]; then
+  . $MODPATH/functions.sh
+else
+  echo "! Can't find functions script! Aborting!"; exit 1
+fi
 
-help() {
-choice=""
-while [ "$choice" != "q" ]; do
-  clear
-  echo "${G}Welcome to the How-to for FontChanger!${N}"
-  echo "${G}This is the Folder Structure You Will Need to Follow${N}"
-  echo "${G}In Order for FontChanger to Properly Detect an Apply Your Font!${N}"
-  echo "${G}Note ------ /sdcard Equals Internal Storage  ${N}"
-  echo " "
-  echo " "
-  echo " "
-  echo " --/sdcard/"
-  echo "     |--Fontchanger/"
-  echo "          |--Fonts/"
-  echo "              |--Custom/"
-  echo -e "              ${R}|--<font-folder-name>/${N}"
-  echo -e "                       ${G}|--<font>.ttf${N}"
-  echo -e "                       ${G}|--<font>.ttf${N}"
-  echo " "
-  echo " You Need To Place Your Font Folders in /storage/emulated/0/Fontchanger/Fonts/Custom."
-  echo " The Folder in ${R}RED${N} is Name of the Font You Want to Apply."
-  echo " This Would be the Main Folder That Holds the ttf Files for That Font."
-  echo " The Files in ${G}GREEN${N} are the ttf Files For That Specific Font."
-  echo " You Can Have Multiple Font Folders Inside the Fontchanger/Fonts Folder."
-  echo " After Creating and Placing the Correct Folders and ttf Files in the Fonts Folder"
-  echo " Please Come Back to Apply the Font of Your Choice"
-  echo -n "${R}Return to menu? < y | n > : ${N}"
-  read -r mchoice
-  [ "$mchoice" = "y" ] && menu || clear && quit
-done
+#######################################################################################################
+#                                        MENU                                                         #
+#######################################################################################################
+menu() {
+echo "$div"
+pcenter "${G} ___________________    ___________________________ ${N}"
+pcenter "${G} \_   _____/\_____  \   \      \__    ___/   _____/ ${N}"
+pcenter "${G}  |    __)   /   |   \  /   |   \|    |  \_____  \  ${N}"
+pcenter "${G}  |     \   /    |    \/    |    \    |  /        \ ${N}"
+pcenter "${G}  \___  /   \_______  /\____|__  /____| /_______  / ${N}"
+pcenter "${G}      \/            \/         \/               \/  ${N}"
+echo " "
+echo "$div"
+mod_head
+echo " "
+pcenter "${B}Welcome to Font Changer!${N}"
+echo " "
+echo "${R}IF THIS IS YOUR FIRST TIME PLEASE CHOOSE OPTION 5 TO SEE HOW TO SET UP YOUR CUSTOM FONTS!${N}"
+echo " "
+FONT=$(get_file_value $CFONT CURRENT=)
+if [ $FONT ] ; then
+  echo "${Y}[=] Current Font is $FONT [=]${N}"
+else
+  echo "${R}[!] No Font Applied Yet [!]${N}"
+fi
+echo "${B}[-] Select an Option...${N}"
+echo " "
+sleep 1
+echo -e "${W}[1]${N} ${G} - Choose From Over 200 Fonts${N}"
+echo " "
+echo -e "${W}[2]${N} ${G} - List Fonts in Folder (Custom)${N}"
+echo " "
+echo -e "${W}[3]${N} ${G} - Change to Stock Font${N}"
+echo " "
+echo -e "${W}[4]${N} ${G} - Change Emojis${N}"
+echo " "
+echo -e "${W}[5]${N} ${G} - How to Set Up the Font Folder${N}"
+echo " "
+echo -e "${W}[6]${N} ${G} - Take Logs${N}"
+echo " "
+echo -e "${R}[Q] - Quit${N}"
+echo " "
+echo -n "${B}[CHOOSE] : ${N}"
+echo " "
+read -r choice
+  case $choice in
+    1) echo "${Y}[-] Font Chooser Menu Selected...${N}"
+      font_menu
+      ;;
+    2) echo "${G}[-] Custom Font Menu Selected...${N}"
+      custom_menu
+      ;;
+    3) echo "${B}[-] Stock Font Menu Selected...${N}"
+      default_menu
+      ;;
+    4) echo "${R}[-] Emoji Menu Selected...${N}"
+      emoji_menu
+      ;;
+    5) echo "${C}[-] Help Selected...${N}"
+      help
+      ;;
+#    6) log_print " Collecting logs and creating archive "
+#      magisk_version
+#      collect_logs
+#      upload_logs
+#      quit
+#      ;;
+    q|Q) echo "${R}[-] Quiting...${N}"
+      clear
+      quit
+      ;;
+    *) echo "${Y}[!] Item Not Available! Try Again [!]${N}"
+      sleep 1.5
+      clear
+      ;;
+  esac
 }
-
-apply_custom_font(){
+#######################################################################################################
+#                                        SHORTCUTS                                                    #
+#######################################################################################################
+apply_font_shortcut() {
 echo -e "${B}Applying Font. Please Wait...${N}"
 sleep 2
-choice2=$(grep -w $choice $MODPATH/customfontlist.txt | tr -d "[$num]" | tr -d ' ')
+choice2="$(grep -w $i $MODPATH/fontlist.txt | tr -d '[ ]' | tr -d '[0-9]' | tr -d ' ')"
 rm -rf $MODPATH/system/fonts > /dev/null 2>&1
 mkdir -p $MODPATH/system/fonts > /dev/null 2>&1
-mkdir -p $MODPATH/system/etc > /dev/null 2>&1
-curl -k -o "$FCDIR/Fonts/fonts.xml" https://john-fawkes.com/Downloads/xml/fonts.xml
-cp -f $FCDIR/Fonts/fonts.xml $MODPATH/system/etc
-set_perm $MODPATH/system/etc/fonts.xml 0 0 0644
-choice3=$(find $FCDIR/Fonts/Custom/ -maxdepth 1 -type f -name "*.ttf")
-for file in $FCDIR/Fonts/Custom/$choice2/*.ttf; do
-  mv "$file" "${file/$choice3/$FCDIR/Fonts/Custom/$choice2/Roboto.ttf}"
-done
-cp -f $FCDIR/Fonts/Custom/$choice2/* $MODPATH/system/fonts > /dev/null 2>&1
-set_perm_recursive $MODPATH/system/fonts 0 0 0755 0644 > /dev/null 2>&1
-truncate -s 0 $CFONT
-echo -n "CURRENT=$choice2" >> $CFONT
-echo -e "${B}Font Applied Successfully...${N}"
-echo -e "${R}You Will Need to Reboot to Apply Changes${N}"
-echo -n "${R}Reboot? < y | n > : ${N}"
-read -r mchoice
-[ "$mchoice" = "y" ] && reboot || echo "Reboot Unsuccessful... Please Reboot Manually"
-echo -n "${R}Return to menu? < y | n > : ${N}"
-read -r mchoice
-[ "$mchoice" = "y" ] && menu || clear && quit
-}
-
-list_custom_fonts() {
-  num=0
-  rm $MODPATH/customfontlist.txt > /dev/null 2>&1
-  touch $MODPATH/customfontlist.txt > /dev/null 2>&1
-  for i in $(ls "$FCDIR/Fonts/Custom" | sort); do
-    sleep 0.1
-    num=$((num+1))
-    echo -e "[$num] $i" >> $MODPATH/customfontlist.txt && echo "${W}[$num]${N} ${B}$i${N}"
-  done
-}
-
-apply_font() {
-echo -e "${B}Applying Font. Please Wait...${N}"
-sleep 2
-choice2="$(grep -w $choice $MODPATH/fontlist.txt | tr -d '[ ]' | tr -d $choice | tr -d ' ')"
-rm -rf $MODPATH/system/fonts > /dev/null 2>&1
-mkdir -p $MODPATH/system/fonts > /dev/null 2>&1
-mkdir -p $MODPATH/system/etc > /dev/null 2>&1
-curl -k -o "$FCDIR/Fonts/fonts.xml" https://john-fawkes.com/Downloads/xml/fonts.xml
-cp -f $FCDIR/Fonts/fonts.xml $MODPATH/system/etc
-set_perm $MODPATH/system/etc/fonts.xml 0 0 0644
+if [ -f $MODPATH/system/etc/fonts.xml ]; then
+  rm -f $MODPATH/system/etc/fonts.xml
+fi
+if [ ! -f /system/etc/fonts.xml ]; then
+  mkdir -p $MODPATH/system/etc > /dev/null 2>&1
+  curl -k -o "$FCDIR/Fonts/fonts.xml" https://john-fawkes.com/Downloads/xml/fonts.xml
+  cp -f $FCDIR/Fonts/fonts.xml $MODPATH/system/etc
+  set_perm $MODPATH/system/etc/fonts.xml 0 0 0644
+fi
 curl -k -o "$FCDIR/Fonts/$choice2.zip" https://john-fawkes.com/Downloads/$choice2.zip
 unzip -o "$FCDIR/Fonts/$choice2.zip" 'system/*' -d $MODPATH >&2 
 set_perm_recursive $MODPATH/system/fonts 0 0 0755 0644 > /dev/null 2>&1
 truncate -s 0 $CFONT
 echo -n "CURRENT=$choice2" >> $CFONT
-echo -e "${B}Font Applied Successfully...${N}"
-echo -e "${R}You Will Need to Reboot to Apply Changes${N}"
-echo -n "${R}Reboot? < y | n > : ${N}"
-read -r mchoice
-[ "$mchoice" = "y" ] && reboot || echo "Reboot Unsuccessful... Please Reboot Manually"
-echo -n "${R}Return to menu? < y | n > : ${N}"
-read -r mchoice
-[ "$mchoice" = "y" ] && menu || clear && quit
+if [ -d "$FCDIR/Fonts/$choice2.zip" ] && [ -d $MODPATH/system/fonts ]; then
+  font_reboot_menu
+else
+  echo -e "${R}[!] FONT WAS NOT APPLIED [!]${N}"
+  echo -e "${R} PLEASE TRY AGAIN${N}"
+  exit
+fi
 }
 
-list_fonts() {
-  num=0
-  rm $MODPATH/fontlist.txt > /dev/null 2>&1
-  fonts=$(cat $FCDIR/fonts-list.txt | sed 's/.zip//')
-  touch $MODPATH/fontlist.txt > /dev/null 2>&1
-  for font in $fonts; do
-    sleep 0.1
-    num=$((num+1))
-    echo -e "[$num] $font" >> $MODPATH/fontlist.txt && echo -e "${W}[$num]${N} ${G}$font${N}"
-  done
-}
-
-font_menu() {
-  choice=""
-while [ "$choice" != "q" ]; do
-  list_fonts
-  break
+apply_custom_font_shortcut() {
+nofont=(
+$(find -L $MIRROR/system/fonts -maxdepth 1 -type f -name "*.ttf" -o -name "*.ttc" | sed 's#.*/##' | sort -r)
+)
+choice2="$(grep -w $i $MODPATH/customfontlist.txt | tr -d '[ ]' | tr -d '[0-9]' | tr -d ' ')"
+choice3=(
+$(find $FCDIR/Fonts/Custom/$choice2 -maxdepth 1 -type f -name "*.ttf" -o -name "*.ttc" -prune | sed 's#.*/##'| sort -r)
+)
+choice4=$(ls $MIRROR/system/fonts | wc -l)
+echo -e "${B}Applying Custom Font. Please Wait...${N}"
+sleep 2
+rm -rf $MODPATH/system/fonts > /dev/null 2>&1
+mkdir -p $MODPATH/system/fonts > /dev/null 2>&1
+if [ -f $MODPATH/system/etc/fonts.xml ]; then
+  rm -f $MODPATH/system/etc/fonts.xml
+fi
+if [ ! -f $MIRROR/system/etc/fonts.xml ]; then
+  mkdir -p $MODPATH/system/etc > /dev/null 2>&1
+  curl -k -o "$FCDIR/Fonts/fonts.xml" https://john-fawkes.com/Downloads/xml/fonts.xml
+  cp -f $FCDIR/Fonts/fonts.xml $MODPATH/system/etc
+  set_perm $MODPATH/system/etc/fonts.xml 0 0 0644
+fi
+i=-$(ls $FCDIR/Fonts/Custom/$choice2/$choice3 | wc -l)
+IFS=$'\n'
+while ((i++ < $choice4 - 1)); do
+  cp -f $FCDIR/Fonts/Custom/$choice2 "$FCDIR/Fonts/Custom/$choice2/${nofont[$i]}"
+#  i=$((i+1))
 done
-wrong=$(cat $MODPATH/fontlist.txt | wc -l)
-echo -e "${G}Please Choose a Font to Apply. Enter the Corresponding Number...${N}"
-read -r choice
-  case $choice in
-      $choice)
-        if [ $choice == "q" ]; then
-          echo "${R}Quiting...${N}"
-          clear
-          quit
-        elif [ $choice -gt $wrong ]; then
-          echo "${Y}[!] Item Not Available! Try Again... [!]${N}"
-          sleep 1.5
-          clear
-        else
-          apply_font
-        fi
-        ;;
-  esac
+unset IFS
+cp -f $FCDIR/Fonts/Custom/$choice2/* $MODPATH/system/fonts > /dev/null 2>&1
+set_perm_recursive $MODPATH/system/fonts 0 0 0755 0644 > /dev/null 2>&1
+truncate -s 0 $CFONT
+echo -n "CURRENT=$choice2" >> $CFONT
+if [ -d "$FCDIR/Fonts/Custom/$choice2.zip" ] && [ -d $MODPATH/system/fonts ]; then
+  font_reboot_menu
+else
+  echo -e "${R}[!] FONT WAS NOT APPLIED [!]${N}"
+  echo -e "${R} PLEASE TRY AGAIN${N}"
+  exit
+fi
 }
 
-default_menu() {
-  choice=""
-  while [ "$choice" != "q" ]; do
-  echo -e "${G}Would You Like to Restore your Default Font?${N}"
-  echo -e "${G}Please Enter (Y)es or (N)o...${N}"
-  read -r choice
-  case $choice in
-      y|yes) echo "${B}Restore Default Selected...${N}"
-        rm -rf $MODPATH/system/fonts
-        rm -f $MODPATH/system/etc/fonts.xml
-        truncate -s 0 $CFONT
-        break
-        ;;
-      n|no) echo "${C}Keeping Modded Font...${N}"
-        break
-        ;;
-      *) echo "${Y}[!] Item Not Available! Try Again [!]${N}"
-        sleep 1.5
-        clear
-        ;;
-  esac
-  done
-  echo -n "${R}Return to menu? < y | n > : ${N}"
-  read -r mchoice
-  [ "$mchoice" = "y" ] && menu || clear && quit
-}
-
-custom_menu() {
-choice=""
-  while [ "$choice" != "q" ]; do
-  list_custom_fonts
-  break
-  done
-  wrong=$(cat $MODPATH/customfontlist.txt | wc -l) 
-  echo -e "${G}Please Choose a Font to Apply. Enter the Corresponding Number...${N}"
-  read -r choice
-  case $choice in
-      $choice)
-        if [ $choice == "q" ]; then
-          echo "${R}Quiting...${N}"
-          clear
-          quit
-        elif [  $choice -gt $wrong ]; then
-          echo "${Y}[!] Item Not Available! Try Again... [!]${N}"
-          sleep 1.5
-          clear
-        else
-          apply_custom_font
-        fi
-        ;;
-  esac
-}
-
-menu() {
-choice=""
-  while [ "$choice" != "q" ]; do
-    echo "$div"
-    pcenter "${G} ___________________    ___________________________ ${N}"
-    pcenter "${G} \_   _____/\_____  \   \      \__    ___/   _____/ ${N}"
-    pcenter "${G}  |    __)   /   |   \  /   |   \|    |  \_____  \  ${N}"
-    pcenter "${G}  |     \   /    |    \/    |    \    |  /        \ ${N}"
-    pcenter "${G}  \___  /   \_______  /\____|__  /____| /_______  / ${N}"
-    pcenter "${G}      \/            \/         \/               \/  ${N}"
-    echo " "
-    echo "$div"
-    mod_head
-    echo " "
-    pcenter "${B}Welcome to Font Changer!${N}"
-    echo " "
-    echo "${R}IF THIS IS YOUR FIRST TIME PLEASE CHOOSE OPTION 5 TO SEE HOW TO SET UP YOUR CUSTOM FONTS!${N}"
-    echo " "
+case "$1" in
+  -a|--font) shift
+    for i in "$@"; do
+      apply_font_shortcut $i
+	    echo "$div"
+	  done
+	  exit;;
+  -c|--cemoji) shift
+    for i in "$@"; do
+      apply_custom_emoji $i
+      echo "$div"
+    done
+    exit;;
+  -d|--cfont) shift
+    for i in "$@"; do
+      apply_custom_font_shortcut $i
+      echo "$div"
+    done
+    exit;;
+  -e|--emoji) shift
+    for i in "$@"; do
+      apply_emoji $i
+      echo "$div"
+    done
+    exit;;
+  -h|--help) shift
+    help;;
+  -l|--listc) shift
+    custom_font_menu
+    exit;;
+  -m|--list) shift
+    font_menu;;
+  -s|--current) shift
     FONT=$(get_file_value $CFONT CURRENT=)
-    if [ $FONT ] ; then
-      echo "${R}[=] Current Font is $FONT [=]${N}"
+    if [ $FONT ]; then
+      echo "${Y}[=] Current Font is $FONT [=]${N}"
     else
       echo "${R}[!] No Font Applied Yet [!]${N}"
     fi
-    echo "${B}[-] Select an Option...${N}"
-    echo " "
-    sleep 1
-    echo -e "${W}[1]${N} ${G}- Choose From Over 200 Fonts${N}"
-    echo " "
-    echo -e "${W}[2]${N} ${G}- List Fonts in Folder (Custom)${N}"
-    echo " "
-    echo -e "${W}[3]${N} ${G}- Change to Stock Font${N}"
-    echo " "
-#    echo -e "${W}[4]${N} ${G}- Change Emojis${N}"
-#    echo " "
-    echo -e "${W}[5]${N} ${G}- How to Set Up the Font Folder${N}"
-    echo " "
-    echo -e "${R}[Q] - Quit${N}"
-    echo " "
-    echo -n "${B}[CHOOSE] : ${N}"
-    echo " "
-    read -r choice
-    case $choice in
-      1) echo "${Y}[-] Font Chooser Menu Selected...${N}"
-        font_menu
-        ;;
-      2) echo "${G}[-] Custom Font Menu Selected...${N}"
-        custom_menu
-        ;;
-      3) echo "${B}[-] Stock Font Menu Selected...${N}"
-        default_menu
-        ;;
-#      4) echo "${R}[-] Emoji Menu Selected...${N}"
-#        emoji_menu
-#        ;;
-      5) echo "${C}[-] Help Selected...${N}"
-        help
-        ;;
-      q|Q) echo "${R}[-] Quiting...${N}"
-        clear
-        quit
-        ;;
-      *) echo "${Y}[!] Item Not Available! Try Again [!]${N}"
-        sleep 1.5
-        clear
-        ;;
-    esac
-  done
-}
+	    echo "$div"
+	  exit;;
+#  -u|--upgrade)
+#    wget https://raw.githubusercontent.com/VR-25/acc/${2:-master}/install-latest.sh --output-document $MODPATH/install-latest.sh
+#    sh $MODPATH/install-latest.sh ${2:-master}
+#    exit;;
+esac
 
 menu
 
