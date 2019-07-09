@@ -146,6 +146,7 @@ if $BOOTMODE; then
         rm /storage/emulated/0/Fontchanger/fonts-list.txt
         rm /storage/emulated/o/Fontchanger/emojis-list.txt
         mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom
+        mkdir -p /storage/emulated/0/Fontchanger/Emojis/Custom
         $TMPDIR/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
         $TMPDIR/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/emojis-list.txt https://john-fawkes.com/Downloads/emojilist/emojis-list.txt
         if [ -f /storage/emulated/0/Fontchanger/fonts-list.txt ] || [ -f /storage/emulated/0/Fontchanger/emojis-list.txt ]; then
@@ -176,7 +177,7 @@ set_permissions() {
   set_perm $MODPATH/system/bin/font_changer 0 2000 0755
   set_perm $MODPATH/curl 0 2000 0755
   set_perm $MODPATH/sleep 0 2000 0755
-  
+
   ui_print " "
   ui_print " [-] After Installing type su then hit enter and type font_changer in terminal [-] "
   ui_print " [-] Then Choose Option 5 to Read the How-to on How to Set up your Custom Fonts [-] "
@@ -205,10 +206,10 @@ test_connection2() {
   [23]) ui_print " [-] HTTP connectivity is up [-] "
     CON2=true
     ;;
-  5) ui_print " [!] The web proxy won't let us through [!] " 
+  5) ui_print " [!] The web proxy won't let us through [!] "
     NCON2=true
     ;;
-  *) ui_print " [!] The network is down or very slow 6 [!] " 
+  *) ui_print " [!] The network is down or very slow [!] "
     NCON2=true
     ;;
 esac

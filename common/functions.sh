@@ -522,5 +522,5 @@ case $choice in
     clear
     ;;
 esac
-returndw_menu
+return_menu
 }
