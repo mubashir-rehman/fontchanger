@@ -135,27 +135,34 @@ on_install() {
   ui_print "- Extracting module files"
   unzip -o "$ZIPFILE" 'system/*' -d $MODPATH >&2
   chmod 0755 $TMPDIR/busybox-$ARCH32
-  ui_print " [-] Checking For Internet Connection..."
+  ui_print " [-] Checking For Internet Connection... [-] "
 if $BOOTMODE; then
-    test_connection3
-  if [ $? -eq 0 ]; then
-    rm /storage/emulated/0/Fontchanger/fonts-list.txt
-    mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom
-    chmod 0755 $TMPDIR/curl-$ARCH32
-    $TMPDIR/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
-    if [ -f /storage/emulated/0/Fontchanger/fonts-list.txt ]; then
-      ui_print " [-] Font List Downloaded Successfully..."
-    else
-      ui_print " [!] Error Downloading Font List [!]..."
-    fi
-  else
-    cancel " [!] No Internet Detected [!]..."
-  fi
+  chmod 0755 $TMPDIR/curl-$ARCH32
+  chmod 0755 $TMPDIR/busybox-$ARCH32
+  test_connection3
+  [ $CON3 ] || test_connection2
+  [ $CON2 ] || test_connection
+      if [ $CON ] || [ $CON2 ] || [ $CON3 ]; then
+        rm /storage/emulated/0/Fontchanger/fonts-list.txt
+        rm /storage/emulated/o/Fontchanger/emojis-list.txt
+        mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom
+        $TMPDIR/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
+        $TMPDIR/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/emojis-list.txt https://john-fawkes.com/Downloads/emojilist/emojis-list.txt
+        if [ -f /storage/emulated/0/Fontchanger/fonts-list.txt ] || [ -f /storage/emulated/0/Fontchanger/emojis-list.txt ]; then
+          ui_print " [-] All Lists Downloaded Successfully... [-] "
+        else
+          ui_print " [!] Error Downloading Lists... [!] "
+        fi
+      else
+        cancel " [!] No Internet Detected... [!] "
+      fi
 else
-  cancel " [-] TWRP Install NOT Supported. Please Install Booted with Internet Connection... "
+  cancel " [-] TWRP Install NOT Supported. Please Install Booted with Internet Connection... [-] "
 fi
   imageless_magisk || sed -i "s|MODPATH=/data/adb/modules|MODPATH=/sbin/.magisk/img|" $MODPATH/system/bin/font_changer
   cp -f $TMPDIR/curl-$ARCH32 $MODPATH/curl
+  cp -f $TMPDIR/sleep-$ARCH32 $MODPATH/sleep
+  cp -f $TMPDIR/functions.sh $MODPATH/functions.sh
 }
 
 # Only some special files require specific permissions
@@ -168,10 +175,11 @@ set_permissions() {
   set_perm_recursive $MODPATH 0 0 0755 0644
   set_perm $MODPATH/system/bin/font_changer 0 2000 0755
   set_perm $MODPATH/curl 0 2000 0755
+  set_perm $MODPATH/sleep 0 2000 0755
   
   ui_print " "
-  ui_print " [-] After Installing type font_changer in terminal [-]"
-  ui_print " [-] Then Choose Option 5 to Read the How-to on How to Set up your Fonts [-]"
+  ui_print " [-] After Installing type su then hit enter and type font_changer in terminal [-] "
+  ui_print " [-] Then Choose Option 5 to Read the How-to on How to Set up your Custom Fonts [-] "
   sleep 3
 
   # Here are some examples:
@@ -188,15 +196,21 @@ cancel() {
 }
 
 test_connection() {
-  ui_print "Testing internet connection "
-  $TMPDIR/busybox-$ARCH32 ping -q -c 1 -W 1 google.com >/dev/null 2>&1 && ui_print "- Internet Detected" || { cancel "Error, No Internet Connection"; false; }
+  ui_print " [-] Testing internet connection [-] "
+  $TMPDIR/busybox-$ARCH32 ping -q -c 1 -W 1 google.com >/dev/null 2>&1 && ui_print " [-] Internet Detected [-] "  && CON=true || { cancel " [-] Error, No Internet Connection [-] ";NCON=true; }
 }
 
 test_connection2() {
   case "$($TMPDIR/curl-$ARCH32 -s --max-time 2 -I http://google.com | sed 's/^[^ ]*  *\([0-9]\).*/\1/; 1q')" in
-  [23]) echo "HTTP connectivity is up";;
-  5) echo "The web proxy won't let us through" false;;
-  *) cancel "The network is down or very slow";;
+  [23]) ui_print " [-] HTTP connectivity is up [-] "
+    CON2=true
+    ;;
+  5) ui_print " [!] The web proxy won't let us through [!] " 
+    NCON2=true
+    ;;
+  *) ui_print " [!] The network is down or very slow 6 [!] " 
+    NCON2=true
+    ;;
 esac
 }
 
@@ -204,9 +218,11 @@ test_connection3() {
   $TMPDIR/busybox-$ARCH32 wget -q --tries=5 --timeout=10 http://www.google.com -O $TMPDIR/google.idx >/dev/null 2>&1
 if [ ! -s $TMPDIR/google.idx ]
 then
-    ui_print " [!] Not Connected..[!]"
-    false
+    ui_print " [!] Not Connected... [!] "
+    NCON3=true
 else
-    ui_print " [-] Connected..!"
+    ui_print " [-] Connected..! [-] "
+    CON3=true
 fi
+rm -f $TMPDIR/google.idx
 }
