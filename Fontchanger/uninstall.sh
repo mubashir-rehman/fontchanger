@@ -11,6 +11,6 @@ if ! which busybox > /dev/null; then
   fi
 fi
 
-pgrep -f '/acc (-|--)[def]|/accd.sh' | xargs kill 2>/dev/null
+pgrep -f '/Fontchanger (-|--)[def]|/font_changer.sh' | xargs kill 2>/dev/null
 set -e
 rm -rf $(readlink -f ${0%/*})
