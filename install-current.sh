@@ -67,9 +67,8 @@ mkdir -p /storage/emulated/0/Fontchanger/Emojis/Custom
 
 ln $installDir/service.sh $installDir/post-fs-data.sh
 
-cp -f $srcDir/curl-$ARCH32 $installDir/curl
-cp -f $srcDir/sleep-$ARCH32 $installDir/sleep
-cp -f $srcDir/common/functions.sh $installDir/functions.sh
+cp -f $srcDir/common/curl-$ARCH32 $installDir/curl
+cp -f $srcDir/common/sleep-$ARCH32 $installDir/sleep
 
 set_perm_recursive $installDir 0 0 0755 0644
 set_perm $installDir/system/bin/font_changer 0 2000 0755

@@ -30,7 +30,7 @@ mkdir -p /sbin/.$modId
   && ln -s ${0%/*} /sbin/.$modId/$modId \
   || cp -a ${0%/*} /sbin/.$modId/$modId
 ln -fs /sbin/.$modId/$modId/$modId.sh /sbin/$modId
-ln -fs /sbin/.$modId/$modId/${modId}-functions.sh /sbin/${modId}-functions
+ln -fs /sbin/.$modId/$modId/$modId-functions.sh /sbin/$modId-functions
 
 # fix termux's PATH
 termuxSu=/data/data/com.termux/files/usr/bin/su
