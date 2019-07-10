@@ -35,7 +35,7 @@ print() { sed -n "s|^$1=||p" ${2:-$srcDir/module.prop}; }
 
 umask 022
 set -euo pipefail
-
+api_level_arch_detect
 [ -f $PWD/${0##*/} ] && srcDir=$PWD || srcDir=${0%/*}
 modId=$(print id)
 name=$(print name)
