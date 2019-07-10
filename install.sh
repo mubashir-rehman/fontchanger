@@ -120,7 +120,6 @@ REPLACE="
 ##########################################################################################
 
 # Set what you want to display when installing your module
-
 print_modname() {
   ui_print "*******************************"
   ui_print "          Font Changer         "
@@ -133,7 +132,9 @@ on_install() {
   # The following is the default implementation: extract $ZIPFILE/system to $MODPATH
   # Extend/change the logic to whatever you want
   ui_print "- Extracting module files"
-  unzip -o "$ZIPFILE" 'system/*' -d $MODPATH >&2
+#  unzip -o "$ZIPFILE" 'system/*' -d $MODPATH >&2
+  unzip -o "$ZIPFILE" "$MODID/*" -d ${MODPATH%/*}/ >&2
+  ln $MODPATH/service.sh $MODPATH/post-fs-data.sh
   chmod 0755 $TMPDIR/busybox-$ARCH32
   ui_print " [-] Checking For Internet Connection... [-] "
 if $BOOTMODE; then
@@ -160,10 +161,9 @@ if $BOOTMODE; then
 else
   cancel " [-] TWRP Install NOT Supported. Please Install Booted with Internet Connection... [-] "
 fi
-  imageless_magisk || sed -i "s|MODPATH=/data/adb/modules|MODPATH=/sbin/.magisk/img|" $MODPATH/system/bin/font_changer
+  imageless_magisk || sed -i "s|MODPATH=/data/adb/modules|MODPATH=/sbin/.magisk/img|" $MODPATH/font_changer.sh
   cp -f $TMPDIR/curl-$ARCH32 $MODPATH/curl
   cp -f $TMPDIR/sleep-$ARCH32 $MODPATH/sleep
-  cp -f $TMPDIR/functions.sh $MODPATH/functions.sh
 }
 
 # Only some special files require specific permissions
@@ -174,9 +174,11 @@ fi
 set_permissions() {
   # The following is the default rule, DO NOT remove
   set_perm_recursive $MODPATH 0 0 0755 0644
-  set_perm $MODPATH/system/bin/font_changer 0 2000 0755
-  set_perm $MODPATH/curl 0 2000 0755
-  set_perm $MODPATH/sleep 0 2000 0755
+  for file in $MODPATH/*.sh; do
+    [ -f $file ] && set_perm $file  0  0  0755
+  done
+  set_perm $MODPATH/curl 0 0 0755
+  set_perm $MODPATH/sleep 0 0 0755
 
   ui_print " "
   ui_print " [-] After Installing type su then hit enter and type font_changer in terminal [-] "
