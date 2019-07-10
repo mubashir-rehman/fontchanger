@@ -557,6 +557,6 @@ if [ $currVer -gt $instVer ];then
   wget --no-check-certificate -q -O $FCDIR/updates/Fontchanger-$currVer.zip $zip
 fi
 mkdir -p Fontchanger-$currVer
-unzip -o "Fontchanger-$currVer.zip" -d $FCDIR/updates/Fontchanger-$currVer >&2
+unzip -o "Fontchanger-$currVer.zip" "$MODID/*" -d $FCDIR/updates/Fontchanger-$currVer >&2
 sh Fontchanger-$currVer/install-current.sh
 }

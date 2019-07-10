@@ -63,7 +63,7 @@ cp -R $srcDir/$modId/ $installDir/
 installDir=$installDir/$modId
 cp $srcDir/module.prop $installDir/
 mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom
-mkdir -P /storage/emulated/0/Fontchanger/Emojis/Custom
+mkdir -p /storage/emulated/0/Fontchanger/Emojis/Custom
 
 ln $installDir/service.sh $installDir/post-fs-data.sh
 

@@ -38,6 +38,6 @@ fi
 
 read -r choice
 
-zip -r9v _builds/"$MODID-$VER-$choice".zip \
+zip -r9v _builds/"$MODID-$choice".zip \
   * .gitattributes .gitignore \
   -x _\*/\* | grep .. && echo
