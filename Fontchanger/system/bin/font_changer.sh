@@ -553,8 +553,11 @@ case "$1" in
 	    echo "$div"
 	  exit;;
   -u|--upgrade) shift
-    wget https://raw.githubusercontent.com/JohnFawkes/fontchanger/master/install-latest.sh --output-document ${MODPATH%/*}/install-latest.sh
-    sh ${MODPATH%/*}/install-latest.sh
+    cd $FCDIR
+    [ -d $FCDIR/updates ] || mkdir updates
+    cd $FCDIR/updates
+    wget https://raw.githubusercontent.com/JohnFawkes/fontchanger/master/install-latest.sh --output-document install-latest.sh
+    sh install-latest.sh
     wait
     if [ $? -eq 0 ]; then
       if [ $instVer == $currVer ]; then

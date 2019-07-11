@@ -1,5 +1,5 @@
 #!/system/bin/sh
-set +x
+set -x
 # From-source Installer/Upgrader
 # Copyright (c) 2019, VR25 (xda-developers.com)
 # License: GPLv3+
@@ -85,13 +85,8 @@ fi
 
 installDir=$installDir/$modId
 cp -f $srcDir/module.prop $installDir
-cp -f $srcDir/${modId}-functions.sh $installDir
-if [ ! -d $installDir/system/bin ]; then
-  mkdir -p $installDir/system/bin
-  cp -f $srcDir/system/bin/font_changer.sh $installDir/system/bin/font_changer
-else
-  cp -f $srcDir/system/bin/font_changer.sh $installDir/system/bin/font_changer
-fi
+cp -f $srcDir/$modId/* $installDir
+
 mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom
 mkdir -p /storage/emulated/0/Fontchanger/Emojis/Custom
 cp -f $srcDir/README.md $installDir
@@ -100,7 +95,7 @@ cp -f $srcDir/common/sleep-$ARCH32 $installDir/sleep
 
 set_perm_recursive $installDir 0 0 0755 0644
 set_perm $installDir/system/bin/font_changer 0 0 0755
-set_perm $installDir/functions.sh 0 0 0755
+set_perm $installDir/$modId-functions.sh 0 0 0755
 set_perm $installDir/curl 0 0 0755
 set_perm $installDir/sleep 0 0 0755
 

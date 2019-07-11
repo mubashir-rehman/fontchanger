@@ -23,7 +23,4 @@ if [ -d $FCDIR/updates/FontChanger-$currVer ]; then
 fi
 }
 
-cd $FCDIR
-[ ! -d $FCDIR/updates ] || mkdir updates
-cd $FCDIR/updates
 updater
