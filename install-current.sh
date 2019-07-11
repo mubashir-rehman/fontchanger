@@ -3,6 +3,23 @@
 # Copyright (c) 2019, VR25 (xda-developers.com)
 # License: GPLv3+
 
+set_perm() {
+  chown $2:$3 $1 || return 1
+  chmod $4 $1 || return 1
+  CON=$5
+  [ -z $CON ] && CON=u:object_r:system_file:s0
+  chcon $CON $1 || return 1
+}
+
+set_perm_recursive() {
+  find $1 -type d 2>/dev/null | while read dir; do
+    set_perm $dir $2 $3 $4 $6
+  done
+  find $1 -type f -o -type l 2>/dev/null | while read file; do
+    set_perm $file $2 $3 $5 $6
+  done
+}
+
 
 if ! which busybox > /dev/null; then
   if [ -d /sbin/.magisk/busybox ]; then
@@ -52,9 +69,9 @@ License: GPLv3+
 (i) Installing to $installDir/$modId/...
 CAT
 
-cp -R $srcDir/$modId/ $installDir/
 installDir=$installDir/$modId
-cp $srcDir/module.prop $installDir/
+cp -f $srcDir/module.prop $installDir
+cp -f $srcDir/${modId}-functions.sh $installDir
 mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom
 mkdir -p /storage/emulated/0/Fontchanger/Emojis/Custom
 cp -f $srcDir/README.md $installDir
@@ -62,10 +79,10 @@ cp -f $srcDir/common/curl-$ARCH32 $installDir/curl
 cp -f $srcDir/common/sleep-$ARCH32 $installDir/sleep
 
 set_perm_recursive $installDir 0 0 0755 0644
-set_perm $installDir/system/bin/font_changer 0 2000 0755
-set_perm $installDir/functions.sh 0 2000 0755
-set_perm $installDir/curl 0 2000 0755
-set_perm $installDir/sleep 0 2000 0755
+set_perm $installDir/system/bin/font_changer 0 0 0755
+set_perm $installDir/functions.sh 0 0 0755
+set_perm $installDir/curl 0 0 0755
+set_perm $installDir/sleep 0 0 0755
 
 $instDir/curl -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
 $instDir/curl -k -o /storage/emulated/0/Fontchanger/emojis-list.txt https://john-fawkes.com/Downloads/emojilist/emojis-list.txt

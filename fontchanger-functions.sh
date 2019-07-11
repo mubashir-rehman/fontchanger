@@ -556,15 +556,17 @@ zip=https://gitreleases.dev/gh/johnfawkes/fontchanger/latest/Fontchanger-$currVe
 if [ $currVer -gt $instVer ];then 
   wget --no-check-certificate -q -O $FCDIR/updates/Fontchanger-$currVer.zip $zip
   mkdir -p Fontchanger-$currVer
-  unzip -o "Fontchanger-$currVer.zip" "$MODID/*" -d $FCDIR/updates/Fontchanger-$currVer >&2
+  unzip -o "Fontchanger-$currVer.zip" -d $FCDIR/updates/Fontchanger-$currVer >&2
   sh Fontchanger-$currVer/install-current.sh
+  if [ $instVer == $currVer ]; then
+    echo "[!] Update Applied Successfully [!]"
+  else
+    echo "[!] Update Failed [!]"
+  fi
 else
   echo "[!] No Update Available [!]"
 fi
-rm -rf $FCDIR/updates/Fontchanger-$currVer
-if [ $instVer == $currVer ]; then
-  echo "[!] Update Applied Successfully [!]"
-else
-  echo "[!] Update Failed [!]"
+if [ -d $FCDIR/updates/FontChanger-$currVer ]; then
+  rm -rf $FCDIR/updates/Fontchanger-$currVer
 fi
 }
