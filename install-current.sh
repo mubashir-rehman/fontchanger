@@ -74,7 +74,7 @@ installDir=$installDir/$modId
 cp -f $srcDir/module.prop $installDir
 cp -f $srcDir/${modId}-functions.sh $installDir
 if [ ! -d $installDir/system/bin ]; then
-  mkdir $installDir/system/bin
+  mkdir -p $installDir/system/bin
   cp -f $srcDir/system/bin/font_changer.sh $installDir/system/bin/font_changer
 else
   cp -f $srcDir/system/bin/font_changer.sh $installDir/system/bin/font_changer

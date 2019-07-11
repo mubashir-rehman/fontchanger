@@ -558,6 +558,7 @@ if [ $currVer -gt $instVer ];then
   mkdir -p Fontchanger-$currVer
   unzip -o "Fontchanger-$currVer.zip" -d $FCDIR/updates/Fontchanger-$currVer >&2
   sh Fontchanger-$currVer/install-current.sh
+  wait
   if [ $instVer == $currVer ]; then
     echo "[!] Update Applied Successfully [!]"
   else
