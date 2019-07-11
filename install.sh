@@ -162,6 +162,8 @@ fi
   imageless_magisk || sed -i "s|MODPATH=/data/adb/modules|MODPATH=/sbin/.magisk/img|" $MODPATH/font_changer.sh
   cp -f $TMPDIR/curl-$ARCH32 $MODPATH/curl
   cp -f $TMPDIR/sleep-$ARCH32 $MODPATH/sleep
+  cp -f $TMPDIR/${MODID}-functions.sh $MODPATH
+  mv $MODPATH/system/bin/font_changer.sh $MODPATH/system/bin/font_changer
 }
 
 # Only some special files require specific permissions
