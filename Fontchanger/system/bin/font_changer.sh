@@ -555,7 +555,7 @@ case "$1" in
   -u|--upgrade) shift
     cd $FCDIR
     [ -d $FCDIR/updates ] || mkdir updates
-    cd $FCDIR/updates
+    cd updates
     wget https://raw.githubusercontent.com/JohnFawkes/fontchanger/master/install-latest.sh --output-document install-latest.sh
     sh install-latest.sh
     wait
