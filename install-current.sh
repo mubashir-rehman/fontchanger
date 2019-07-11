@@ -60,8 +60,8 @@ author=$(print author)
 version=$(print version)
 versionCode=$(print versionCode)
 date=$(print date)
+installDir=/data/adb/modules
 
-[ -d $installDir ] || installDir=/data/adb/modules
 [ -d $installDir ] || installDir=/sbin/.magisk/modules
 [ -d $installDir ] || installDir=/sbin/.core/img
 [ -d $installDir ] || { echo "(!) $installDir not found\n"; exit 1; }
