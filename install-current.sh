@@ -74,7 +74,7 @@ License: GPLv3+
 (i) Installing to $installDir/$modId/...
 CAT
 
-imageless_magisk && MODULESPATH=$(ls /data/adb/modules/* && ls /data/adb/modules_update/*) || MODULESPATH=$(ls /sbin/.core/img/*)
+imageless_magisk && MODULESPATH=$(ls /data/adb/modules/*) && [ -d /data/adb/modules_update ] && $(ls /data/adb/modules_update/*) || MODULESPATH=$(ls /sbin/.core/img/*)
 if [ -f "$MODULESPATH/*/system/etc/*fonts*.xml" ] || [ -f "$MODULESPATH/*/system/fonts/*" ] && [ ! -f "$MODULESPATH/Fontchanger/system/fonts/*" ] || [ -f "$MODULESPATH/Fontchanger/system/etc/*font*.xml" ]; then
 	if [ ! -f "$MODULESPATH/*/disable" ]; then
 		NAME=$(get_var $MODULESPATH/*/module.prop "name=")
@@ -85,7 +85,7 @@ if [ -f "$MODULESPATH/*/system/etc/*fonts*.xml" ] || [ -f "$MODULESPATH/*/system
     exit 2
   fi
 fi
-
+rm -rf $installDir/$modId
 cp -R $srcDir/$modId/ $installDir/
 installDir=$installDir/$modId
 cp -f $srcDir/module.prop $installDir/
