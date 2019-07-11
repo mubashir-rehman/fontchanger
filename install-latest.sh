@@ -1,3 +1,4 @@
+#!/system/bin/sh
 SDCARD=/storage/emulated/0
 FCDIR=$SDCARD/Fontchanger
 
