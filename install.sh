@@ -134,7 +134,6 @@ on_install() {
   ui_print "- Extracting module files"
 #  unzip -o "$ZIPFILE" 'system/*' -d $MODPATH >&2
   unzip -o "$ZIPFILE" "$MODID/*" -d ${MODPATH%/*}/ >&2
-  ln $MODPATH/service.sh $MODPATH/post-fs-data.sh
   chmod 0755 $TMPDIR/busybox-$ARCH32
   ui_print " [-] Checking For Internet Connection... [-] "
 if $BOOTMODE; then
@@ -174,9 +173,8 @@ fi
 set_permissions() {
   # The following is the default rule, DO NOT remove
   set_perm_recursive $MODPATH 0 0 0755 0644
-  for file in $MODPATH/*.sh; do
-    [ -f $file ] && set_perm $file  0  0  0755
-  done
+  set_perm $MODPATH/${MODID}-functions.sh  0  0  0755
+  set_perm $MODPATH/system/bin/font_changer 0 0 0755
   set_perm $MODPATH/curl 0 0 0755
   set_perm $MODPATH/sleep 0 0 0755
 

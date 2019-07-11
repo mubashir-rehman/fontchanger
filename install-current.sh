@@ -4,9 +4,6 @@
 # License: GPLv3+
 
 
-echo
-trap 'e=$?; echo; exit $e' EXIT
-
 if ! which busybox > /dev/null; then
   if [ -d /sbin/.magisk/busybox ]; then
     PATH=/sbin/.magisk/busybox:$PATH
@@ -18,10 +15,9 @@ if ! which busybox > /dev/null; then
   fi
 fi
 
-if [ $(id -u) -ne 0 ]; then
-  echo "(!) $0 must run as root (su)"
-  exit 1
-fi
+# Detect root
+_name=$(basename $0)
+ls /data >/dev/null 2>&1 || { echo "$MODID needs to run as root!"; echo "type 'su' then '$_name'"; quit 1; }
 
 if [ -f /data/adb/magisk/util_functions.sh ]; then
   . /data/adb/magisk/util_functions.sh
@@ -33,8 +29,6 @@ fi
 
 print() { sed -n "s|^$1=||p" ${2:-$srcDir/module.prop}; }
 
-umask 022
-set -euo pipefail
 api_level_arch_detect
 [ -f $PWD/${0##*/} ] && srcDir=$PWD || srcDir=${0%/*}
 modId=$(print id)
@@ -43,10 +37,10 @@ author=$(print author)
 version=$(print version)
 versionCode=$(print versionCode)
 date=$(print date)
-installDir=/sbin/.magisk/modules
+installDir=/data/adb/modules
 
 [ -d $installDir ] || installDir=/sbin/.core/img
-[ -d $installDir ] || installDir=/data/adb
+[ -d $installDir ] || installDir=/sbin/.magisk/modules
 [ -d $installDir ] || { echo "(!) /data/adb/ not found\n"; exit 1; }
 
 
@@ -58,15 +52,12 @@ License: GPLv3+
 (i) Installing to $installDir/$modId/...
 CAT
 
-rm -rf $(readlink -f /sbin/.$modId/$modId) 2>/dev/null || :
 cp -R $srcDir/$modId/ $installDir/
 installDir=$installDir/$modId
 cp $srcDir/module.prop $installDir/
 mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom
 mkdir -p /storage/emulated/0/Fontchanger/Emojis/Custom
-
-ln $installDir/service.sh $installDir/post-fs-data.sh
-
+cp -f $srcDir/README.md $installDir
 cp -f $srcDir/common/curl-$ARCH32 $installDir/curl
 cp -f $srcDir/common/sleep-$ARCH32 $installDir/sleep
 
@@ -79,11 +70,4 @@ set_perm $installDir/sleep 0 2000 0755
 $instDir/curl -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
 $instDir/curl -k -o /storage/emulated/0/Fontchanger/emojis-list.txt https://john-fawkes.com/Downloads/emojilist/emojis-list.txt
 
-set +euo pipefail
-
-echo
-trap - EXIT
-
-e=$?
-[ $e -eq 0 ] || { echo; exit $e; }
 exit 0

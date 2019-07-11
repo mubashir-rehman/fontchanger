@@ -6,7 +6,7 @@
 # Variables
 OLDPATH=$PATH
 MODID=Fontchanger
-MODPATH=/sbin/.Fontchanger/$MODID
+MODPATH=/data/adb/modules/$MODID
 MODPROP=$MODPATH/module.prop
 SDCARD=/storage/emulated/0
 FCDIR=$SDCARD/Fontchanger
@@ -354,8 +354,8 @@ mod_head() {
 # > Rather than editing the default vars above.
 
 # Load Needed Functions
-if [ -f $MODPATH/functions ]; then
-  . $MODPATH/functions
+if [ -f $MODPATH/${MODID}-functions.sh ]; then
+  . $MODPATH/${MODID}-functions.sh
 else
   echo "! Can't find functions script! Aborting!"; exit 1
 fi
@@ -557,12 +557,6 @@ case "$1" in
     [ ! -d $FCDIR/updates ] || mkdir updates
     cd $FCDIR/updates
     updater
-    rm -rf $FCDIR/updates/Fontchanger-$currVer
-    if [ $instVer == $currVer ]; then
-      echo "${G}[!] Update Applied Successfully [!]${N}"
-    else
-      echo "${R}[!] Update Failed [!]${N}"
-    fi
     exit;;
 esac
 
