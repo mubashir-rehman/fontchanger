@@ -1,8 +1,20 @@
-#!/system/bin/sh
-set -x
+#!/system/bin/s
 # From-source Installer/Upgrader
 # Copyright (c) 2019, VR25 (xda-developers.com)
 # License: GPLv3+
+
+if [ -f /data/adb/magisk/util_functions.sh ]; then
+  . /data/adb/magisk/util_functions.sh
+elif [ -f /data/magisk/util_functions.sh ]; then
+  . /data/magisk/util_functions.sh
+else
+  echo "! Can't find magisk util_functions! Aborting!"; exit 1
+fi
+
+imageless_magisk() {
+  [ $MAGISK_VER_CODE -gt 18100 ]
+  return $?
+}
 
 set_perm() {
   chown $2:$3 $1 || return 1
@@ -38,14 +50,6 @@ fi
 _name=$(basename $0)
 ls /data >/dev/null 2>&1 || { echo "$MODID needs to run as root!"; echo "type 'su' then '$_name'"; quit 1; }
 
-if [ -f /data/adb/magisk/util_functions.sh ]; then
-  . /data/adb/magisk/util_functions.sh
-elif [ -f /data/magisk/util_functions.sh ]; then
-  . /data/magisk/util_functions.sh
-else
-  echo "! Can't find magisk util_functions! Aborting!"; exit 1
-fi
-
 print() { sed -n "s|^$1=||p" $srcDir/module.prop; }
 
 api_level_arch_detect
@@ -56,12 +60,11 @@ author=$(print author)
 version=$(print version)
 versionCode=$(print versionCode)
 date=$(print date)
-installDir=/data/adb/modules
 
-[ -d $installDir ] || installDir=/sbin/.core/img
+[ -d $installDir ] || installDir=/data/adb/modules
 [ -d $installDir ] || installDir=/sbin/.magisk/modules
-[ -d $installDir ] || { echo "(!) /data/adb/ not found\n"; exit 1; }
-
+[ -d $installDir ] || installDir=/sbin/.core/img
+[ -d $installDir ] || { echo "(!) $installDir not found\n"; exit 1; }
 
 cat << CAT
 $name $version $date
@@ -83,15 +86,15 @@ if [ -f "$MODULESPATH/*/system/etc/*fonts*.xml" ] || [ -f "$MODULESPATH/*/system
   fi
 fi
 
+cp -R $srcDir/$modId/ $installDir/
 installDir=$installDir/$modId
-cp -f $srcDir/module.prop $installDir
-cp -f $srcDir/$modId/* $installDir
-
-mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom
-mkdir -p /storage/emulated/0/Fontchanger/Emojis/Custom
+cp -f $srcDir/module.prop $installDir/
 cp -f $srcDir/README.md $installDir
 cp -f $srcDir/common/curl-$ARCH32 $installDir/curl
 cp -f $srcDir/common/sleep-$ARCH32 $installDir/sleep
+
+mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom
+mkdir -p /storage/emulated/0/Fontchanger/Emojis/Custom
 
 set_perm_recursive $installDir 0 0 0755 0644
 set_perm $installDir/system/bin/font_changer 0 0 0755
