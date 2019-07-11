@@ -1,4 +1,5 @@
 #!/system/bin/sh
+set +x
 # From-source Installer/Upgrader
 # Copyright (c) 2019, VR25 (xda-developers.com)
 # License: GPLv3+
@@ -72,6 +73,12 @@ CAT
 installDir=$installDir/$modId
 cp -f $srcDir/module.prop $installDir
 cp -f $srcDir/${modId}-functions.sh $installDir
+if [ ! -d $installDir/system/bin ]; then
+  mkdir $installDir/system/bin
+  cp -f $srcDir/system/bin/font_changer.sh $installDir/system/bin/font_changer
+else
+  cp -f $srcDir/system/bin/font_changer.sh $installDir/system/bin/font_changer
+fi
 mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom
 mkdir -p /storage/emulated/0/Fontchanger/Emojis/Custom
 cp -f $srcDir/README.md $installDir
@@ -84,7 +91,7 @@ set_perm $installDir/functions.sh 0 0 0755
 set_perm $installDir/curl 0 0 0755
 set_perm $installDir/sleep 0 0 0755
 
-$instDir/curl -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
-$instDir/curl -k -o /storage/emulated/0/Fontchanger/emojis-list.txt https://john-fawkes.com/Downloads/emojilist/emojis-list.txt
+$installDir/curl -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
+$installDir/curl -k -o /storage/emulated/0/Fontchanger/emojis-list.txt https://john-fawkes.com/Downloads/emojilist/emojis-list.txt
 
 exit 0
