@@ -45,7 +45,7 @@ else
   echo "! Can't find magisk util_functions! Aborting!"; exit 1
 fi
 
-print() { sed -n "s|^$1=||p" ${2:-$srcDir/module.prop}; }
+print() { sed -n "s|^$1=||p" $srcDir/module.prop; }
 
 api_level_arch_detect
 [ -f $PWD/${0##*/} ] && srcDir=$PWD || srcDir=${0%/*}

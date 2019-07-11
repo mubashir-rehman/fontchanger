@@ -552,11 +552,15 @@ case "$1" in
     fi
 	    echo "$div"
 	  exit;;
-  -u|--upgrade)
-    cd $FCDIR
-    [ ! -d $FCDIR/updates ] || mkdir updates
-    cd $FCDIR/updates
-    updater
+  -u|--upgrade) shift
+    wget https://raw.githubusercontent.com/JohnFawkes/fontchanger/master/install-latest.sh --output-document ${MODPATH%/*}/install-latest.sh
+    sh ${MODPATH%/*}/install-latest.sh
+    wait
+    if [ $instVer == $currVer ]; then
+      echo "[!] Update Applied Successfully [!]"
+    else
+      echo "[!] Update Failed [!]"
+    fi
     exit;;
 esac
 
