@@ -1,3 +1,4 @@
+#!/system/bin/sh
 ##########################################################################################
 #
 # Magisk Module Installer Script
@@ -132,7 +133,8 @@ on_install() {
   # The following is the default implementation: extract $ZIPFILE/system to $MODPATH
   # Extend/change the logic to whatever you want
   ui_print "- Extracting module files"
-  unzip -o "$ZIPFILE" 'system/*' -d $MODPATH >&2
+#  unzip -o "$ZIPFILE" 'Fontchanger-functions.sh' 'system/*' -d $MODPATH >&2
+  unzip -o "$ZIPFILE" "$MODID/*" -d ${MODPATH%/*}/ >&2
   chmod 0755 $TMPDIR/busybox-$ARCH32
   ui_print " [-] Checking For Internet Connection... [-] "
 if $BOOTMODE; then
@@ -141,28 +143,38 @@ if $BOOTMODE; then
   test_connection3
   [ $CON3 ] || test_connection2
   [ $CON2 ] || test_connection
-      if [ $CON ] || [ $CON2 ] || [ $CON3 ]; then
-        rm /storage/emulated/0/Fontchanger/fonts-list.txt
-        rm /storage/emulated/o/Fontchanger/emojis-list.txt
-        mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom
-        mkdir -p /storage/emulated/0/Fontchanger/Emojis/Custom
-        $TMPDIR/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
-        $TMPDIR/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/emojis-list.txt https://john-fawkes.com/Downloads/emojilist/emojis-list.txt
-        if [ -f /storage/emulated/0/Fontchanger/fonts-list.txt ] || [ -f /storage/emulated/0/Fontchanger/emojis-list.txt ]; then
-          ui_print " [-] All Lists Downloaded Successfully... [-] "
-        else
-          ui_print " [!] Error Downloading Lists... [!] "
-        fi
-      else
-        cancel " [!] No Internet Detected... [!] "
+  if [ $CON ] || [ $CON2 ] || [ $CON3 ]; then
+    imageless_magisk && MODULESPATH=$(ls /data/adb/modules/* && ls /data/adb/modules_update/*) || MODULESPATH=$(ls /sbin/.core/img/*)
+    if [ -f "$MODULESPATH/*/system/etc/*fonts*.xml" ] || [ -f "$MODULESPATH/*/system/fonts/*" ] && [ ! -f "$MODULESPATH/Fontchanger/system/fonts/*" ] || [ -f "$MODULESPATH/Fontchanger/system/etc/*font*.xml" ]; then
+			if [ ! -f "$MODULESPATH/*/disable" ]; then
+				NAME=$(get_var $MODULESPATH/*/module.prop "name=")
+				ui_print "[!]"
+				ui_print "[!] Module editing fonts detected!"
+				ui_print "[!] Module - '$NAME'[!]"
+				ui_print "[!]"
+        cancel
       fi
+    fi
+    rm /storage/emulated/0/Fontchanger/fonts-list.txt
+    rm /storage/emulated/o/Fontchanger/emojis-list.txt
+    mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom
+    mkdir -p /storage/emulated/0/Fontchanger/Emojis/Custom
+    $TMPDIR/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
+    $TMPDIR/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/emojis-list.txt https://john-fawkes.com/Downloads/emojilist/emojis-list.txt
+    if [ -f /storage/emulated/0/Fontchanger/fonts-list.txt ] || [ -f /storage/emulated/0/Fontchanger/emojis-list.txt ]; then
+      ui_print " [-] All Lists Downloaded Successfully... [-] "
+    else
+      ui_print " [!] Error Downloading Lists... [!] "
+    fi
+  else
+    cancel " [!] No Internet Detected... [!] "
+  fi
 else
   cancel " [-] TWRP Install NOT Supported. Please Install Booted with Internet Connection... [-] "
 fi
   imageless_magisk || sed -i "s|MODPATH=/data/adb/modules|MODPATH=/sbin/.magisk/img|" $MODPATH/font_changer.sh
   cp -f $TMPDIR/curl-$ARCH32 $MODPATH/curl
   cp -f $TMPDIR/sleep-$ARCH32 $MODPATH/sleep
-  cp -f $TMPDIR/${MODID}-functions.sh $MODPATH
   mv $MODPATH/system/bin/font_changer.sh $MODPATH/system/bin/font_changer
 }
 
@@ -174,7 +186,7 @@ fi
 set_permissions() {
   # The following is the default rule, DO NOT remove
   set_perm_recursive $MODPATH 0 0 0755 0644
-  set_perm $MODPATH/${MODID}-functions.sh  0  0  0755
+  set_perm $MODPATH/$MODID-functions.sh  0  0  0755
   set_perm $MODPATH/system/bin/font_changer 0 0 0755
   set_perm $MODPATH/curl 0 0 0755
   set_perm $MODPATH/sleep 0 0 0755
@@ -228,3 +240,5 @@ else
 fi
 rm -f $TMPDIR/google.idx
 }
+
+get_ver() { sed -n 's/^name=//p' ${1}; }

@@ -556,10 +556,14 @@ case "$1" in
     wget https://raw.githubusercontent.com/JohnFawkes/fontchanger/master/install-latest.sh --output-document ${MODPATH%/*}/install-latest.sh
     sh ${MODPATH%/*}/install-latest.sh
     wait
-    if [ $instVer == $currVer ]; then
-      echo "[!] Update Applied Successfully [!]"
+    if [ $? -eq 0 ]; then
+      if [ $instVer == $currVer ]; then
+        echo "[!] Update Applied Successfully [!]"
+      else
+        echo "[!] Update Failed [!]"
+      fi
     else
-      echo "[!] Update Failed [!]"
+      echo " [!] Update Failed [!]"
     fi
     exit;;
 esac

@@ -1,3 +1,6 @@
+SDCARD=/storage/emulated/0
+FCDIR=$SDCARD/Fontchanger
+
 get_ver() { sed -n 's/^date=//p' ${1:-}; }
 
 updater() {

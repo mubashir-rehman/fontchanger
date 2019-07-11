@@ -21,6 +21,7 @@ set_perm_recursive() {
   done
 }
 
+get_ver() { sed -n 's/^name=//p' ${1}; }
 
 if ! which busybox > /dev/null; then
   if [ -d /sbin/.magisk/busybox ]; then
@@ -69,6 +70,18 @@ License: GPLv3+
 
 (i) Installing to $installDir/$modId/...
 CAT
+
+imageless_magisk && MODULESPATH=$(ls /data/adb/modules/* && ls /data/adb/modules_update/*) || MODULESPATH=$(ls /sbin/.core/img/*)
+if [ -f "$MODULESPATH/*/system/etc/*fonts*.xml" ] || [ -f "$MODULESPATH/*/system/fonts/*" ] && [ ! -f "$MODULESPATH/Fontchanger/system/fonts/*" ] || [ -f "$MODULESPATH/Fontchanger/system/etc/*font*.xml" ]; then
+	if [ ! -f "$MODULESPATH/*/disable" ]; then
+		NAME=$(get_var $MODULESPATH/*/module.prop "name=")
+		ui_print "[!]"
+		ui_print "[!] Module editing fonts detected!"
+		ui_print "[!] Module - '$NAME'[!]"
+		ui_print "[!]"
+    exit 2
+  fi
+fi
 
 installDir=$installDir/$modId
 cp -f $srcDir/module.prop $installDir
