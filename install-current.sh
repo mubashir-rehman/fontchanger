@@ -92,6 +92,7 @@ cp -f $srcDir/module.prop $installDir/
 cp -f $srcDir/README.md $installDir
 cp -f $srcDir/common/curl-$ARCH32 $installDir/curl
 cp -f $srcDir/common/sleep-$ARCH32 $installDir/sleep
+mv $installDir/system/bin/font_changer.sh $installDir/system/bin/font_changer
 
 mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom
 mkdir -p /storage/emulated/0/Fontchanger/Emojis/Custom
