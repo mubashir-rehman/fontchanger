@@ -8,7 +8,6 @@ MODID=Fontchanger
 _name=$(basename $0)
 ls /data >/dev/null 2>&1 || { echo "$MODID needs to run as root!"; echo "type 'su' then '$_name'"; quit 1; }
 
-set -euo pipefail
 if ! which busybox > /dev/null; then
   if [ -d /sbin/.magisk/busybox ]; then
     PATH=/sbin/.magisk/busybox:$PATH
@@ -27,7 +26,7 @@ elif [ -f /data/magisk/util_functions.sh ]; then
 else
   echo "! Can't find magisk util_functions! Aborting!"; exit 1
 fi
-
+set -euo pipefail
 imageless_magisk() {
   [ $MAGISK_VER_CODE -gt 18100 ]
   return $?
