@@ -48,12 +48,18 @@ set_perm_recursive() {
   done
 }
 
-get_ver() { sed -n 's/^name=//p' ${1}; }
+get_file_value() {
+	if [ -f "$1" ]; then
+		grep $2 $1 | sed "s|.*${2}||" | sed 's|\"||g'
+	fi
+}
+
+get_ver() { sed -n 's/^date=//p' $1; }
 
 print() { sed -n "s|^$1=||p" $srcDir/module.prop; }
 
 updater() {
-instVer=$(get_ver /data/adb/modules/$MODID/module.prop 2>/dev/null || :)
+instVer=$(get_ver /data/adb/modules/$MODID/module.prop) 2>/dev/null
 currVer=$(wget https://raw.githubusercontent.com/johnfawkes/$MODID/master/module.prop --output-document - | get_ver)
 zip=https://gitreleases.dev/gh/johnfawkes/fontchanger/latest/Fontchanger-$currVer.zip
 if [ $currVer -gt $instVer ]; then 
@@ -122,9 +128,6 @@ if [ $? -eq 0 ]; then
   if [ $instVer == $currVer ]; then
     echo "[!] Update Applied Successfully [!]"
   fi
-fi
-if [ $? -gt 1 ]; then
-  echo " [!] Update Failed [!]"
 fi
 if [ -d $FCDIR/updates/FontChanger-$currVer ]; then
   rm -rf $FCDIR/updates/Fontchanger-$currVer
