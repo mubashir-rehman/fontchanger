@@ -1,4 +1,5 @@
 #!/system/bin/sh
+trap 'e=$?; echo; exit $e' EXIT
 SDCARD=/storage/emulated/0
 FCDIR=$SDCARD/Fontchanger
 MODID=Fontchanger
@@ -7,6 +8,7 @@ MODID=Fontchanger
 _name=$(basename $0)
 ls /data >/dev/null 2>&1 || { echo "$MODID needs to run as root!"; echo "type 'su' then '$_name'"; quit 1; }
 
+set -euo pipefail
 if ! which busybox > /dev/null; then
   if [ -d /sbin/.magisk/busybox ]; then
     PATH=/sbin/.magisk/busybox:$PATH
@@ -62,7 +64,8 @@ updater() {
 instVer=$(get_ver /data/adb/modules/$MODID/module.prop) 2>/dev/null
 currVer=$(wget https://raw.githubusercontent.com/johnfawkes/$MODID/master/module.prop --output-document - | get_ver)
 zip=https://gitreleases.dev/gh/johnfawkes/fontchanger/latest/Fontchanger-$currVer.zip
-if [ $currVer -gt $instVer ]; then 
+if [ $currVer -gt $instVer ]; then
+trap - EXIT
   wget --no-check-certificate -q -O $FCDIR/updates/Fontchanger-$currVer.zip $zip
   mkdir -p Fontchanger-$currVer
   unzip -o "Fontchanger-$currVer.zip" -d $FCDIR/updates/Fontchanger-$currVer >&2
@@ -124,7 +127,7 @@ else
   echo "[!] No Update Available [!]"
   exit 1
 fi
-if [ $? -eq 0 ]; then
+if [ $? == 0 ]; then
   if [ $instVer == $currVer ]; then
     echo "[!] Update Applied Successfully [!]"
   fi
