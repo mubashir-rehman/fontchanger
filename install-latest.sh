@@ -5,7 +5,7 @@ FCDIR=$SDCARD/Fontchanger
 MODID=Fontchanger
 
 # Detect root
-_name=$(basename $0)
+_name=$(basename ${0:-})
 ls /data >/dev/null 2>&1 || { echo "$MODID needs to run as root!"; echo "type 'su' then '$_name'"; quit 1; }
 
 if ! which busybox > /dev/null; then
@@ -33,34 +33,34 @@ imageless_magisk() {
 }
 
 set_perm() {
-  chown $2:$3 $1 || return 1
-  chmod $4 $1 || return 1
-  CON=$5
+  chown ${2:-}:${3:-} ${1:-} || return 1
+  chmod ${4:-} ${1:-} || return 1
+  CON=${5:-}
   [ -z $CON ] && CON=u:object_r:system_file:s0
-  chcon $CON $1 || return 1
+  chcon $CON ${1:-} || return 1
 }
 
 set_perm_recursive() {
-  find $1 -type d 2>/dev/null | while read dir; do
-    set_perm $dir $2 $3 $4 $6
+  find ${1:-} -type d 2>/dev/null | while read dir; do
+    set_perm $dir ${2:-} ${3:-} ${4:-} ${6:-}
   done
-  find $1 -type f -o -type l 2>/dev/null | while read file; do
-    set_perm $file $2 $3 $5 $6
+  find ${1:-} -type f -o -type l 2>/dev/null | while read file; do
+    set_perm $file ${2:-} ${3:-} ${5:-} ${6:-}
   done
 }
 
 get_file_value() {
-	if [ -f "$1" ]; then
-		grep $2 $1 | sed "s|.*${2}||" | sed 's|\"||g'
+	if [ -f "${1:-}" ]; then
+		grep ${2:-} ${1:-} | sed "s|.*${2:-}||" | sed 's|\"||g'
 	fi
 }
 
-get_ver() { sed -n 's/^date=//p' $1; }
+get_ver() { sed -n 's/^date=//p' ${1:-}; }
 
-print() { sed -n "s|^$1=||p" $srcDir/module.prop; }
+print() { sed -n "s|^${1:-}=||p" $srcDir/module.prop; }
 
 updater() {
-instVer=$(get_ver /data/adb/modules/$MODID/module.prop) 2>/dev/null
+instVer=$(get_ver /data/adb/modules/$MODID/module.prop || :) 2>/dev/null
 currVer=$(wget https://raw.githubusercontent.com/johnfawkes/$MODID/master/module.prop --output-document - | get_ver)
 zip=https://gitreleases.dev/gh/johnfawkes/fontchanger/latest/Fontchanger-$currVer.zip
 if [ $currVer -gt $instVer ]; then
