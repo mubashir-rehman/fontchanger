@@ -121,15 +121,13 @@ CAT
   $installDir/curl -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
   $installDir/curl -k -o /storage/emulated/0/Fontchanger/emojis-list.txt https://john-fawkes.com/Downloads/emojilist/emojis-list.txt
 
+  if [ $instVer == $currVer ]; then
+    echo "[!] Update Applied Successfully [!]"
+  fi
   exit 0
 else
   echo "[!] No Update Available [!]"
   exit 1
-fi
-if [ $EXIT == 0 ]; then
-  if [ $instVer == $currVer ]; then
-    echo "[!] Update Applied Successfully [!]"
-  fi
 fi
 if [ -d $FCDIR/updates/FontChanger-$currVer ]; then
   rm -rf $FCDIR/updates/Fontchanger-$currVer
