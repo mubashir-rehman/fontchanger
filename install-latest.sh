@@ -126,7 +126,7 @@ else
   echo "[!] No Update Available [!]"
   exit 1
 fi
-if [ $? == 0 ]; then
+if [ $EXIT == 0 ]; then
   if [ $instVer == $currVer ]; then
     echo "[!] Update Applied Successfully [!]"
   fi
