@@ -40,7 +40,9 @@
 - <a href="t.me/botom8">@botom8 Telegram</a>
 
 ## Changelog
-### v1.9 - 7.07.2019
+### v1.8 - 7.12.2019
+* Now fonts with only one file can be applied.
+* add ttc support
 * revamped help menu. choose from main menu or use font_changer -h or font_changer -help
 * new shortcuts options. 
 Options:
@@ -59,12 +61,6 @@ Options:
 * added GNU sleep command compiled from source code. no more sleep invaild errors.
 * added progress bar. now list loads faster. (will be applied to custom list in later update)
 * Update feature. now you can use -u flag or —update to update to beta builds. no more searching telegram for the latest
-
-### v1.8 - 6.18.2019
-* Now fonts with only one file can be applied.
-* add ttc support
-* Bug fixes with custom
-* Now all fonts are replaced 
 
 ### v1.7 - 6.14.2019
 * Fix custom Fonts applying for devices that dont use Roboto as default font
