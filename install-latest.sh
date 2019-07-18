@@ -125,7 +125,12 @@ CAT
 
   $installDir/curl -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
   $installDir/curl -k -o /storage/emulated/0/Fontchanger/emojis-list.txt https://john-fawkes.com/Downloads/emojilist/emojis-list.txt
-
+if [ -d $FCDIR/backup/fonts ]; then
+  mv $FCDIR/backup/fonts $installDir/system
+fi
+if [ -d $FCDIR/backup/etc ]; then
+  mv $FCDIR/backup/etc $installDir/system
+fi
   echo "[!] Update Applied Successfully [!]"
   exit 0
 else
