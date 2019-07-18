@@ -98,6 +98,13 @@ CAT
       exit 2
     fi
   fi
+  mkdir -p $FCDIR/backup
+  if [ -d $installDir/system/fonts ]; then
+    mv $installdir/system/fonts $FCDIR/backup/fonts
+  fi
+  if [ -d $installDir/system/etc ]; then
+    mv $installDir/system/etc $FCDIR/backup/etc
+  fi
   rm -rf $installDir/$modId
   cp -R $srcDir/$modId/ $installDir/
   installDir=$installDir/$modId
