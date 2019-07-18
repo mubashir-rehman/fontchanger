@@ -252,12 +252,6 @@ rm -f $MODPATH/system/fonts/*Emoji > /dev/null 2>&1
 if [ ! -d $MODPATH/system/fonts ]; then
   mkdir -p $MODPATH/system/fonts > /dev/null 2>&1
 fi
-if [ ! -f /system/etc/fonts.xml ]; then
-  mkdir -p $MODPATH/system/etc > /dev/null 2>&1
-  curl -k -o "$FCDIR/Fonts/fonts.xml" https://john-fawkes.com/Downloads/xml/fonts.xml
-  cp -f $FCDIR/Fonts/fonts.xml $MODPATH/system/etc
-  set_perm $MODPATH/system/etc/fonts.xml 0 0 0644
-fi
 curl -k -o "$FCDIR/Fonts/$choice2.zip" https://john-fawkes.com/Downloads/emoji/$choice2.zip
 unzip -o "$FCDIR/Fonts/$choice2.zip" 'system/*' -d $MODPATH >&2
 if [ -e $MIRROR/system/fonts/SamsungColorEmoji.ttf ]; then
@@ -339,6 +333,7 @@ if [ -f $MODPATH/system/fonts/*Emoji*.ttf ]; then
 fi
 rm -rf $MODPATH/system/fonts > /dev/null 2>&1
 mkdir -p $MODPATH/system/fonts > /dev/null 2>&1
+mkdir -p $MODPATH/system/etc > /dev/null 2>&1
 touch $MODPATH/system/etc/fonts.xml
 XML=$MODPATH/system/etc/fonts.xml
 if [ -f $XML ]; then
@@ -438,6 +433,7 @@ curl -k -o "$FCDIR/Fonts/$choice2.zip" https://john-fawkes.com/Downloads/$choice
 mkdir -p $FCDIR/Fonts/$choice2
 unzip -o "$FCDIR/Fonts/$choice2.zip" 'system/*' -d $FCDIR/Fonts/$choice2 >&2 
 mkdir -p $MODPATH/system/fonts
+mkdir -p $MODPATH/system/etc
 cp -rf $FCDIR/Fonts/$choice2/system/fonts/ $MODPATH/system/fonts
 XML=$MODPATH/system/etc/fonts.xml
 if [ -f $XML ]; then
