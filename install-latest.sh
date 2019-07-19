@@ -5,7 +5,7 @@ MODID=Fontchanger
 
 # Detect root
 _name=$(basename $0)
-ls /data >/dev/null 2>&1 || { echo "$MODID needs to run as root!"; echo "type 'su' then '$_name'"; quit 1; }
+ls /data >/dev/null 2>&1 || { echo "${modid} needs to run as root!"; echo "type 'su' then '$_name'"; quit 1; }
 
 if ! which busybox > /dev/null; then
   if [ -d /sbin/.magisk/busybox ]; then
@@ -59,8 +59,8 @@ get_ver() { sed -n 's/^date=//p' $1; }
 print() { sed -n "s|^$1=||p" $srcDir/module.prop; }
 
 updater() {
-instVer=$(get_ver /data/adb/modules/$MODID/module.prop) 2>/dev/null
-currVer=$(wget https://raw.githubusercontent.com/johnfawkes/$MODID/master/module.prop --output-document - | get_ver)
+instVer=$(get_ver /data/adb/modules/${modid}/module.prop) 2>/dev/null
+currVer=$(wget https://raw.githubusercontent.com/johnfawkes/${modid}/master/module.prop --output-document - | get_ver)
 zip=https://gitreleases.dev/gh/johnfawkes/fontchanger/latest/Fontchanger-$currVer.zip
 if [ $currVer -gt $instVer ]; then
   wget --no-check-certificate -q -O $FCDIR/updates/Fontchanger-$currVer.zip $zip
@@ -85,7 +85,7 @@ if [ $currVer -gt $instVer ]; then
   Copyright (c) 2019, $author
   License: GPLv3+
 
-  (i) Installing to $installDir/$modId/...
+  (i) Installing to $installDir/${modid}/...
 CAT
   imageless_magisk && MODULESPATH=$(ls /data/adb/modules/*) && [ -d /data/adb/modules_update ] && $(ls /data/adb/modules_update/*) || MODULESPATH=$(ls /sbin/.core/img/*)
   if [ -f "$MODULESPATH/*/system/etc/*fonts*.xml" ] || [ -f "$MODULESPATH/*/system/fonts/*" ] && [ ! -f "$MODULESPATH/Fontchanger/system/fonts/*" ] || [ -f "$MODULESPATH/Fontchanger/system/etc/*font*.xml" ]; then
@@ -98,34 +98,35 @@ CAT
       exit 2
     fi
   fi
-  mkdir -p $FCDIR/backup
-  if [ -d $installDir/$modId/system/fonts ]; then
-    mv $installdir/$modId/system/fonts $FCDIR/backup
+  mkdir -p $FCDIR/backup/system/fonts
+  mkdir -p $FCDIR/backup/system/etc
+  if [ -d $installDir/${modid}/system/fonts ]; then
+    mv $installdir/${modid}/system/fonts $FCDIR/backup
   fi
-  if [ -d $installDir/$modId/system/etc ]; then
-    mv $installDir/$modId/system/etc $FCDIR/backup
+  if [ -d $installDir/${modid}/system/etc ]; then
+    mv $installDir/${modid}/system/etc $FCDIR/backup
   fi
-  if [ -f $installDir/$modId/currentfont.txt ]; then
-    mv $installDir/$modId/currentfont.txt $FCDIR/backup
+  if [ -f $installDir/${modid}/currentfont.txt ]; then
+    mv $installDir/${modid}/currentfont.txt $FCDIR/backup
   fi
-  if [ -f $installDir/$modId/currentemoji.txt ]; then
-    mv $installDir/$modId/currentemoji.txt $FCDIR/backup
+  if [ -f $installDir/${modid}/currentemoji.txt ]; then
+    mv $installDir/${modid}/currentemoji.txt $FCDIR/backup
   fi
-#  rm -rf $installDir/$modId
-  cp -R $srcDir/$modId/ $installDir/
-  installDir=$installDir/$modId
+  rm -rf $installDir/${modid}
+  cp -R $srcDir/${modid}/ $installDir/
+  installDir=$installDir/${modid}
   cp -f $srcDir/module.prop $installDir/
   cp -f $srcDir/README.md $installDir
   cp -f $srcDir/common/curl-$ARCH32 $installDir/curl
   cp -f $srcDir/common/sleep-$ARCH32 $installDir/sleep
-  mv $installDir/system/bin/font_changer.sh $installDir/system/bin/font_changer
+#  mv $installDir/system/bin/font_changer.sh $installDir/system/bin/font_changer
 
   mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom
   mkdir -p /storage/emulated/0/Fontchanger/Emojis/Custom
 
   set_perm_recursive $installDir 0 0 0755 0644
   set_perm $installDir/font_changer.sh 0 0 0755
-  set_perm $installDir/$modId-functions.sh 0 0 0755
+  set_perm $installDir/${modid}-functions.sh 0 0 0755
   set_perm $installDir/curl 0 0 0755
   set_perm $installDir/sleep 0 0 0755
 
@@ -144,14 +145,11 @@ CAT
     mv $FCDIR/backup/currentemoji.txt $installDir
   fi
   # prepare working directory
-  mkdir -p /sbin/.$modId
-  [ -h /sbin/.$modId/$modId ] && rm /sbin/.$modId/$modId \
-    || rm -rf /sbin/.$modId/$modId 2>/dev/null
-  [ ${MAGISK_VER_CODE:-18200} -gt 18100 ] \
-    && ln -s ${0%/*} /sbin/.$modId/$modId \
-    || cp -a ${0%/*} /sbin/.$modId/$modId
-  ln -fs /sbin/.$modId/$modId/$modId.sh /sbin/$modId
-  ln -fs /sbin/.$modId/$modId/$modId-functions.sh /sbin/$modId-functions.sh
+  mkdir -p /sbin/.${modid}
+  [ -h /sbin/.${modid}/${modid} ] && rm /sbin/.${modid}/${modid} || rm -rf /sbin/.${modid}/${modid} 2>/dev/null
+  [ ${MAGISK_VER_CODE:-18200} -gt 18100 ] && ln -s ${0%/*} /sbin/.${modId}/${modId} || cp -a ${0%/*} /sbin/.${modId}/${modid}
+  ln -fs /sbin/.${modid}/${modid}/font_changer.sh /sbin/font_changer
+  ln -fs /sbin/.${modid}/${modid}/${modid}-functions.sh /sbin/${modid}-functions.sh
 
   # fix termux's PATH
   termuxSu=/data/data/com.termux/files/usr/bin/su
@@ -160,8 +158,6 @@ CAT
     cat $termuxSu.tmp > $termuxSu
     rm $termuxSu.tmp
   fi
-  # start ${modId}d
-  sleep 30
   unset file termuxSu
   echo "[!] Update Applied Successfully [!]"
   exit 0
