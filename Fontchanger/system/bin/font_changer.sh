@@ -622,7 +622,7 @@ case "$1" in
     cd updates
     wget https://raw.githubusercontent.com/JohnFawkes/fontchanger/master/install-latest.sh --output-document install-latest.sh
     sh install-latest.sh
-    wait.
+    wait
     exit;;
 esac
 
