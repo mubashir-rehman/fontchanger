@@ -254,22 +254,23 @@ if [ ! -d $MODPATH/system/fonts ]; then
 fi
 curl -k -o "$FCDIR/Fonts/$choice2.zip" https://john-fawkes.com/Downloads/emoji/$choice2.zip
 unzip -o "$FCDIR/Fonts/$choice2.zip" 'system/*' -d $MODPATH >&2
-if [ -e $MIRROR/system/fonts/SamsungColorEmoji.ttf ]; then
+if [ -f $MIRROR/system/fonts/SamsungColorEmoji.ttf ]; then
   cp -f $MODPATH/system/fonts/$choice2.ttf $MODPATH/system/fonts/SamsungColorEmoji.ttf
 fi
-if [ -e $MIRROR/system/fonts/hTC_ColorEmoji.ttf ]; then
+if [ -f $MIRROR/system/fonts/hTC_ColorEmoji.ttf ]; then
   cp -f $MODPATH/system/fonts/$choice2.ttf $MODPATH/system/fonts/hTC_ColorEmoji.ttf
 fi
 set_perm_recursive $MODPATH/system/fonts 0 0 0755 0644 > /dev/null 2>&1
-truncate -s 0 $CFONT
-echo -n "CURRENT=$choice2" >> $CFONT
-if [ -d "$FCDIR/Fonts/$choice2.zip" ] && [ -d $MODPATH/system/fonts ]; then
+truncate -s 0 $CEMOJI
+echo -n "CURRENT=$choice2" >> $CEMOJI
+if [ -f "$FCDIR/Fonts/$choice2.zip" ] && [ -d $MODPATH/system/fonts ]; then
   font_reboot_menu
 else
   echo -e "${R}[!] Emoji WAS NOT APPLIED [!]${N}"
   echo -e "${R} PLEASE TRY AGAIN${N}"
   sleep 3
   clear
+  emoji_menu
 fi
 }
 
@@ -336,6 +337,7 @@ mkdir -p $MODPATH/system/fonts > /dev/null 2>&1
 mkdir -p $MODPATH/system/etc > /dev/null 2>&1
 touch $MODPATH/system/etc/fonts.xml
 XML=$MODPATH/system/etc/fonts.xml
+FONTXML=$(sed '1,/alias/d' $MIRROR/system/etc/fonts.xml)
 if [ -f $XML ]; then
   rm -rf $XML
   touch $XML
@@ -354,22 +356,32 @@ for i in ${choice3[@]}; do
   echo "        <font weight=\"400\" style=\"normal\">\"$i\"</font>" >> $XML
 done
 echo "    </family>
-    <alias name=\"sans-serif-thin\" to=\"sans-serif\" weight=\"100\" />
-    <alias name=\"sans-serif-light\" to=\"sans-serif\" weight=\"300\" />
-    <alias name=\"sans-serif-medium\" to=\"sans-serif\" weight=\"500\" />
-    <alias name=\"sans-serif-black\" to=\"sans-serif\" weight=\"900\" />
-    <alias name=\"arial\" to=\"sans-serif\" />
-    <alias name=\"helvetica\" to=\"sans-serif\" />
-    <alias name=\"tahoma\" to=\"sans-serif\" />
-    <alias name=\"verdana\" to=\"sans-serif\" />
-    <alias name=\"sans-serif-condensed\" to=\"sans-serif\" />
 </familyset>" >> $XML
-if [ -f $MODPATH/*Emoji*.ttf ]; then
+#    <alias name=\"sans-serif-thin\" to=\"sans-serif\" weight=\"100\" />
+#    <alias name=\"sans-serif-light\" to=\"sans-serif\" weight=\"300\" />
+#    <alias name=\"sans-serif-medium\" to=\"sans-serif\" weight=\"500\" />
+#    <alias name=\"sans-serif-black\" to=\"sans-serif\" weight=\"900\" />
+#    <alias name=\"arial\" to=\"sans-serif\" />
+#    <alias name=\"helvetica\" to=\"sans-serif\" />
+#    <alias name=\"tahoma\" to=\"sans-serif\" />
+#    <alias name=\"verdana\" to=\"sans-serif\" />
+#    <alias name=\"sans-serif-condensed\" to=\"sans-serif\" />
+echo "
+     $FONTXML" >> $XML
+if [ -f "$MODPATH/*Emoji*.ttf" ]; then
   for i in $MODPATH/*Emoji*.ttf; do
     mv -f $i $MODPATH/system/fonts
   done
 fi
 cp -f $FCDIR/Fonts/Custom/$choice2/* $MODPATH/system/fonts/
+set_perm_recursive $MODPATH/system/fonts 0 0 0755 0644 > /dev/null 2>&1
+truncate -s 0 $CFONT
+echo -n "CURRENT=$choice2" >> $CFONT
+if [ -f "$FCDIR/Fonts/$choice2.zip" ] && [ -d $MODPATH/system/fonts ]; then
+  font_reboot_menu
+else
+  retry
+fi
 }
 
 list_custom_fonts() {
@@ -413,10 +425,9 @@ choice4=$(ls $MIRROR/system/fonts | wc -l)
 echo -e "${B}Applying Font. Please Wait...${N}"
 sleep 2
 choice2="$(grep -w $choice $MODPATH/fontlist.txt | tr -d '[ ]' | tr -d $choice | tr -d ' ')"
-choice3=(
-$(find $FCDIR/Fonts/$choice2/system/fonts -maxdepth 1 -type f -name "*.ttf" -o -name "*.ttc" -prune | sed 's#.*/##'| sort -r)
-)
-if [ -f $MODPATH/system/fonts/*Emoji*.ttf ]; then
+choice3=$(find $FCDIR/Fonts/$choice2/system/fonts -maxdepth 1 -type f -name "*.ttf" -o -name "*.ttc" -prune | sed 's#.*/##'| sort -r)
+
+if [ -f "$MODPATH/system/fonts/*Emoji*.ttf" ]; then
   for i in $MODPATH/system/fonts/*Emoji*.ttf; do
     mv -f $i $MODPATH
   done
@@ -434,8 +445,9 @@ mkdir -p $FCDIR/Fonts/$choice2
 unzip -o "$FCDIR/Fonts/$choice2.zip" 'system/*' -d $FCDIR/Fonts/$choice2 >&2 
 mkdir -p $MODPATH/system/fonts
 mkdir -p $MODPATH/system/etc
-cp -rf $FCDIR/Fonts/$choice2/system/fonts/ $MODPATH/system/fonts
+cp -rf $FCDIR/Fonts/$choice2/system/fonts $MODPATH/system
 XML=$MODPATH/system/etc/fonts.xml
+FONTXML=$(sed '1,/alias/d' $MIRROR/system/etc/fonts.xml)
 if [ -f $XML ]; then
   rm -rf $XML
   touch $XML
@@ -454,18 +466,21 @@ for i in ${choice3[@]}; do
   echo "        <font weight=\"400\" style=\"normal\">\"$i\"</font>" >> $XML
 done
 echo "    </family>
-    <alias name=\"sans-serif-thin\" to=\"sans-serif\" weight=\"100\" />
-    <alias name=\"sans-serif-light\" to=\"sans-serif\" weight=\"300\" />
-    <alias name=\"sans-serif-medium\" to=\"sans-serif\" weight=\"500\" />
-    <alias name=\"sans-serif-black\" to=\"sans-serif\" weight=\"900\" />
-    <alias name=\"arial\" to=\"sans-serif\" />
-    <alias name=\"helvetica\" to=\"sans-serif\" />
-    <alias name=\"tahoma\" to=\"sans-serif\" />
-    <alias name=\"verdana\" to=\"sans-serif\" />
-    <alias name=\"sans-serif-condensed\" to=\"sans-serif\" />
 </familyset>" >> $XML
 
-if [ -f $MODPATH/*Emoji*.ttf ]; then
+#    <alias name=\"sans-serif-thin\" to=\"sans-serif\" weight=\"100\" />
+#    <alias name=\"sans-serif-light\" to=\"sans-serif\" weight=\"300\" />
+#    <alias name=\"sans-serif-medium\" to=\"sans-serif\" weight=\"500\" />
+#    <alias name=\"sans-serif-black\" to=\"sans-serif\" weight=\"900\" />
+#    <alias name=\"arial\" to=\"sans-serif\" />
+#    <alias name=\"helvetica\" to=\"sans-serif\" />
+#    <alias name=\"tahoma\" to=\"sans-serif\" />
+#    <alias name=\"verdana\" to=\"sans-serif\" />
+#    <alias name=\"sans-serif-condensed\" to=\"sans-serif\" />
+echo "    
+     $FONTXML" >> $XML
+
+if [ -f "$MODPATH/*Emoji*.ttf" ]; then
   for i in $MODPATH/*Emoji*.ttf; do
     mv -f $i $MODPATH/system/fonts
   done
@@ -531,7 +546,7 @@ echo -e "${G}Please Enter (y)es or (n)o...${N}"
 read -r choice
 case $choice in
   y|yes) echo -e "${B}Restore Default Selected...${N}"
-    if [ -f $MODPATH/system/fonts/*Emoji*.ttf ]; then
+    if [ -f "$MODPATH/system/fonts/*Emoji*.ttf" ]; then
       echo -e "${B}Would You like to Keep Your Emojis?${N}"
       echo -e "${B}Please Enter (y)es or (n)o...${N}"
       read -r emojichoice

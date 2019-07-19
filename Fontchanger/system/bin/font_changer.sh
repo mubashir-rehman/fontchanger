@@ -15,6 +15,7 @@ TMPLOGLOC=$FCDIR/FontChanger_logs
 XZLOG=$FCDIR/Fontchanger_logs.tar.xz
 if [ -d /cache ]; then CACHELOC=/cache; else CACHELOC=/data/cache; fi       
 CFONT=$MODPATH/currentfont.txt
+CEMOJI=$MODPATH/currentemoji.txt
 MIRROR=/sbin/.magisk/mirror
 TMPDIR=/dev/tmp
 alias curl=$MODPATH/curl
@@ -381,10 +382,16 @@ echo " "
 echo "${R}IF THIS IS YOUR FIRST TIME PLEASE CHOOSE OPTION 5 TO SEE HOW TO SET UP YOUR CUSTOM FONTS!${N}"
 echo " "
 FONT=$(get_file_value $CFONT CURRENT=)
+EMOJI=$(get_file_value $CEMOJI CURRENT=)
 if [ $FONT ] ; then
   echo "${Y}[=] Current Font is $FONT [=]${N}"
 else
   echo "${R}[!] No Font Applied Yet [!]${N}"
+fi
+if [ $EMOJI ]; then
+  echo "${Y}[=] Current Emoji is $EMOJI [=]${N}"
+else
+  echo "${R}[!] No Emoji Applied Yet [!]${N}"
 fi
 echo "${B}[-] Select an Option...${N}"
 echo " "
@@ -486,7 +493,7 @@ echo "    </family>
     <alias name=\"verdana\" to=\"sans-serif\" />
     <alias name=\"sans-serif-condensed\" to=\"sans-serif\" />
 </familyset>" >> $XML
-if [ -f $MODPATH/*Emoji*.ttf ]; then
+if [ -f "$MODPATH/*Emoji*.ttf" ]; then
   for i in $MODPATH/*Emoji*.ttf; do
     mv -f $i $MODPATH/system/fonts
   done
@@ -513,7 +520,7 @@ $(find $FCDIR/Fonts/Custom/$choice2 -maxdepth 1 -type f -name "*.ttf" -o -name "
 choice4=$(ls $MIRROR/system/fonts | wc -l)
 echo -e "${B}Applying Custom Font. Please Wait...${N}"
 sleep 2
-if [ -f $MODPATH/system/fonts/*Emoji*.ttf ]; then
+if [ -f "$MODPATH/system/fonts/*Emoji*.ttf" ]; then
   for i in $MODPATH/system/fonts/*Emoji*.ttf; do
     mv -f $i $MODPATH
   done
@@ -550,7 +557,7 @@ echo "    </family>
     <alias name=\"verdana\" to=\"sans-serif\" />
     <alias name=\"sans-serif-condensed\" to=\"sans-serif\" />
 </familyset>" >> $XML
-if [ -f $MODPATH/*Emoji*.ttf ]; then
+if [ -f "$MODPATH/*Emoji*.ttf" ]; then
   for i in $MODPATH/*Emoji*.ttf; do
     mv -f $i $MODPATH/system/fonts
   done
@@ -615,7 +622,7 @@ case "$1" in
     cd updates
     wget https://raw.githubusercontent.com/JohnFawkes/fontchanger/master/install-latest.sh --output-document install-latest.sh
     sh install-latest.sh
-    wait
+    wait.
     exit;;
 esac
 
