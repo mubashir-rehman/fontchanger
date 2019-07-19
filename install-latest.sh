@@ -100,10 +100,10 @@ CAT
   fi
   mkdir -p $FCDIR/backup
   if [ -d $installDir/$modId/system/fonts ]; then
-    mv $installdir/$modId/system/fonts $FCDIR/backup/fonts
+    mv $installdir/$modId/system/fonts $FCDIR/backup
   fi
   if [ -d $installDir/$modId/system/etc ]; then
-    mv $installDir/$modId/system/etc $FCDIR/backup/etc
+    mv $installDir/$modId/system/etc $FCDIR/backup
   fi
   if [ -f $installDir/$modId/currentfont.txt ]; then
     mv $installDir/$modId/currentfont.txt $FCDIR/backup
