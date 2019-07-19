@@ -99,17 +99,17 @@ CAT
     fi
   fi
   mkdir -p $FCDIR/backup
-  if [ -d $installDir/system/fonts ]; then
-    mv $installdir/system/fonts $FCDIR/backup/fonts
+  if [ -d $installDir/$modId/system/fonts ]; then
+    mv $installdir/$modId/system/fonts $FCDIR/backup/fonts
   fi
-  if [ -d $installDir/system/etc ]; then
-    mv $installDir/system/etc $FCDIR/backup/etc
+  if [ -d $installDir/$modId/system/etc ]; then
+    mv $installDir/$modId/system/etc $FCDIR/backup/etc
   fi
-  if [ -f $installDir/$MODPATH/currentfont.txt ]; then
-    mv $installDir/$MODPATH/currentfont.txt $FCDIR/backup
+  if [ -f $installDir/$modId/currentfont.txt ]; then
+    mv $installDir/$modId/currentfont.txt $FCDIR/backup
   fi
-  if [ -f $installDir/$MODPATH/currentemoji.txt ]; then
-    mv $installDir/$MODPATH/currentemoji.txt $FCDIR/backup
+  if [ -f $installDir/$modId/currentemoji.txt ]; then
+    mv $installDir/$modId/currentemoji.txt $FCDIR/backup
   fi
   rm -rf $installDir/$modId
   cp -R $srcDir/$modId/ $installDir/
