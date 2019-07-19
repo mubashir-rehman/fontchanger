@@ -112,7 +112,7 @@ CAT
     mv $installDir/$modId/currentemoji.txt $FCDIR/backup
   fi
 #  rm -rf $installDir/$modId
-  cp -Ru $srcDir/$modId/ $installDir/
+  cp -R $srcDir/$modId/ $installDir/
   installDir=$installDir/$modId
   cp -f $srcDir/module.prop $installDir/
   cp -f $srcDir/README.md $installDir
@@ -124,25 +124,45 @@ CAT
   mkdir -p /storage/emulated/0/Fontchanger/Emojis/Custom
 
   set_perm_recursive $installDir 0 0 0755 0644
-  set_perm $installDir/system/bin/font_changer 0 0 0755
+  set_perm $installDir/font_changer.sh 0 0 0755
   set_perm $installDir/$modId-functions.sh 0 0 0755
   set_perm $installDir/curl 0 0 0755
   set_perm $installDir/sleep 0 0 0755
 
   $installDir/curl -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
   $installDir/curl -k -o /storage/emulated/0/Fontchanger/emojis-list.txt https://john-fawkes.com/Downloads/emojilist/emojis-list.txt
-if [ -d $FCDIR/backup/fonts ]; then
-  mv $FCDIR/backup/fonts $installDir/system
-fi
-if [ -d $FCDIR/backup/etc ]; then
-  mv $FCDIR/backup/etc $installDir/system
-fi
-if [ -f $FCDIR/backup/currentfont.txt ]; then
-  mv $FCDIR/backup/currentfont.txt $installDir
-fi
-if [ -f $FCDIR/backup/currentemoji.txt ]; then
-  mv $FCDIR/backup/currentemoji.txt $installDir
-fi
+  if [ -d $FCDIR/backup/fonts ]; then
+    mv $FCDIR/backup/fonts $installDir/system
+  fi
+  if [ -d $FCDIR/backup/etc ]; then
+    mv $FCDIR/backup/etc $installDir/system
+  fi
+  if [ -f $FCDIR/backup/currentfont.txt ]; then
+    mv $FCDIR/backup/currentfont.txt $installDir
+  fi
+  if [ -f $FCDIR/backup/currentemoji.txt ]; then
+    mv $FCDIR/backup/currentemoji.txt $installDir
+  fi
+  # prepare working directory
+  mkdir -p /sbin/.$modId
+  [ -h /sbin/.$modId/$modId ] && rm /sbin/.$modId/$modId \
+    || rm -rf /sbin/.$modId/$modId 2>/dev/null
+  [ ${MAGISK_VER_CODE:-18200} -gt 18100 ] \
+    && ln -s ${0%/*} /sbin/.$modId/$modId \
+    || cp -a ${0%/*} /sbin/.$modId/$modId
+  ln -fs /sbin/.$modId/$modId/$modId.sh /sbin/$modId
+  ln -fs /sbin/.$modId/$modId/$modId-functions.sh /sbin/$modId-functions.sh
+
+  # fix termux's PATH
+  termuxSu=/data/data/com.termux/files/usr/bin/su
+  if [ -f $termuxSu ] && grep -q 'PATH=.*/sbin/su' $termuxSu; then
+    sed '\|PATH=|s|/sbin/su|/sbin|' $termuxSu > $termuxSu.tmp
+    cat $termuxSu.tmp > $termuxSu
+    rm $termuxSu.tmp
+  fi
+  # start ${modId}d
+  sleep 30
+  unset file termuxSu
   echo "[!] Update Applied Successfully [!]"
   exit 0
 else

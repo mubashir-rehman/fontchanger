@@ -175,7 +175,25 @@ fi
   imageless_magisk || sed -i "s|MODPATH=/data/adb/modules|MODPATH=/sbin/.magisk/img|" $MODPATH/font_changer.sh
   cp -f $TMPDIR/curl-$ARCH32 $MODPATH/curl
   cp -f $TMPDIR/sleep-$ARCH32 $MODPATH/sleep
-  mv $MODPATH/system/bin/font_changer.sh $MODPATH/system/bin/font_changer
+#  mv $MODPATH/system/bin/font_changer.sh $MODPATH/system/bin/font_changer
+  # prepare working directory
+  mkdir -p /sbin/.$modId
+  [ -h /sbin/.$modId/$modId ] && rm /sbin/.$modId/$modId \
+    || rm -rf /sbin/.$modId/$modId 2>/dev/null
+  [ ${MAGISK_VER_CODE:-18200} -gt 18100 ] \
+    && ln -s ${0%/*} /sbin/.$modId/$modId \
+    || cp -a ${0%/*} /sbin/.$modId/$modId
+  ln -fs /sbin/.$modId/$modId/$modId.sh /sbin/$modId
+  ln -fs /sbin/.$modId/$modId/$modId-functions.sh /sbin/$modId-functions.sh
+
+  # fix termux's PATH
+  termuxSu=/data/data/com.termux/files/usr/bin/su
+  if [ -f $termuxSu ] && grep -q 'PATH=.*/sbin/su' $termuxSu; then
+    sed '\|PATH=|s|/sbin/su|/sbin|' $termuxSu > $termuxSu.tmp
+    cat $termuxSu.tmp > $termuxSu
+    rm $termuxSu.tmp
+  fi
+  unset file termuxSu
 }
 
 # Only some special files require specific permissions
@@ -187,7 +205,7 @@ set_permissions() {
   # The following is the default rule, DO NOT remove
   set_perm_recursive $MODPATH 0 0 0755 0644
   set_perm $MODPATH/$MODID-functions.sh  0  0  0755
-  set_perm $MODPATH/system/bin/font_changer 0 0 0755
+  set_perm $MODPATH//font_changer.sh 0 0 0755
   set_perm $MODPATH/curl 0 0 0755
   set_perm $MODPATH/sleep 0 0 0755
 
