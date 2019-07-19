@@ -111,8 +111,8 @@ CAT
   if [ -f $installDir/$modId/currentemoji.txt ]; then
     mv $installDir/$modId/currentemoji.txt $FCDIR/backup
   fi
-  rm -rf $installDir/$modId
-  cp -R $srcDir/$modId/ $installDir/
+#  rm -rf $installDir/$modId
+  cp -Ru $srcDir/$modId/ $installDir/
   installDir=$installDir/$modId
   cp -f $srcDir/module.prop $installDir/
   cp -f $srcDir/README.md $installDir
