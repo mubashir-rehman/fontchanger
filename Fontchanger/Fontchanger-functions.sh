@@ -261,6 +261,7 @@ if [ -f $MIRROR/system/fonts/hTC_ColorEmoji.ttf ]; then
   cp -f $MODPATH/system/fonts/$choice2.ttf $MODPATH/system/fonts/hTC_ColorEmoji.ttf
 fi
 set_perm_recursive $MODPATH/system/fonts 0 0 0755 0644 > /dev/null 2>&1
+touch $CEMOJI
 truncate -s 0 $CEMOJI
 echo -n "CURRENT=$choice2" >> $CEMOJI
 if [ -f "$FCDIR/Fonts/$choice2.zip" ] && [ -d $MODPATH/system/fonts ]; then
@@ -375,6 +376,7 @@ if [ -f "$MODPATH/*Emoji*.ttf" ]; then
 fi
 cp -f $FCDIR/Fonts/Custom/$choice2/* $MODPATH/system/fonts/
 set_perm_recursive $MODPATH/system/fonts 0 0 0755 0644 > /dev/null 2>&1
+touch $CFONT
 truncate -s 0 $CFONT
 echo -n "CURRENT=$choice2" >> $CFONT
 if [ -f "$FCDIR/Fonts/$choice2.zip" ] && [ -d $MODPATH/system/fonts ]; then
@@ -486,6 +488,7 @@ if [ -f "$MODPATH/*Emoji*.ttf" ]; then
   done
 fi
 set_perm_recursive $MODPATH/system/fonts 0 0 0755 0644 > /dev/null 2>&1
+touch $CFONT
 truncate -s 0 $CFONT
 echo -n "CURRENT=$choice2" >> $CFONT
 if [ -f "$FCDIR/Fonts/$choice2.zip" ] && [ -d $MODPATH/system/fonts ]; then

@@ -105,6 +105,12 @@ CAT
   if [ -d $installDir/system/etc ]; then
     mv $installDir/system/etc $FCDIR/backup/etc
   fi
+  if [ -f $installDir/$MODPATH/currentfont.txt ]; then
+    mv $installDir/$MODPATH/currentfont.txt $FCDIR/backup
+  fi
+  if [ -f $installDir/$MODPATH/currentemoji.txt ]; then
+    mv $installDir/$MODPATH/currentemoji.txt $FCDIR/backup
+  fi
   rm -rf $installDir/$modId
   cp -R $srcDir/$modId/ $installDir/
   installDir=$installDir/$modId
@@ -130,6 +136,12 @@ if [ -d $FCDIR/backup/fonts ]; then
 fi
 if [ -d $FCDIR/backup/etc ]; then
   mv $FCDIR/backup/etc $installDir/system
+fi
+if [ -f $FCDIR/backup/currentfont.txt ]; then
+  mv $FCDIR/backup/currentfont.txt $installDir
+fi
+if [ -f $FCDIR/backup/currentemoji.txt ]; then
+  mv $FCDIR/backup/currentemoji.txt $installDir
 fi
   echo "[!] Update Applied Successfully [!]"
   exit 0

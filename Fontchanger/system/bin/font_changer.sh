@@ -455,7 +455,7 @@ choice2="$(grep -w $i $MODPATH/fontlist.txt | tr -d '[ ]' | tr -d '[0-9]' | tr -
 choice3=(
 $(find $FCDIR/Fonts/$choice2/system/fonts -maxdepth 1 -type f -name "*.ttf" -o -name "*.ttc" -prune | sed 's#.*/##'| sort -r)
 )
-if [ -f $MODPATH/system/fonts/*Emoji*.ttf ]; then
+if [ -f "$MODPATH/system/fonts/*Emoji*.ttf" ]; then
   for i in $MODPATH/system/fonts/*Emoji*.ttf; do
     mv -f $i $MODPATH
   done
