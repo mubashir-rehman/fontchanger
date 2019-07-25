@@ -616,14 +616,6 @@ case "$1" in
     fi
 	    echo "$div"
 	  exit;;
-  -u|--upgrade) shift
-    cd $FCDIR
-    [ -d $FCDIR/updates ] || mkdir updates
-    cd updates
-    wget https://raw.githubusercontent.com/JohnFawkes/fontchanger/master/install-latest.sh --output-document install-latest.sh
-    sh install-latest.sh
-    wait
-    exit;;
 esac
 
 menu
