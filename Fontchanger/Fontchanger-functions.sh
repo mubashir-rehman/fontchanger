@@ -319,7 +319,7 @@ emoji_menu() {
 #######################################################################################################
 apply_custom_font() {
 choice2="$(grep -w $choice $MODPATH/customfontlist.txt | tr -d '[ ]' | tr -d $choice | tr -d ' ')"
-#choice3=(
+choice3=(
   $(find $FCDIR/Fonts/Custom/$choice2 -maxdepth 1 -type f -name "*.ttf" -o -name "*.ttc" -prune | sed 's#.*/##' | sort -r)
   )
 choice4=$(ls $MIRROR/system/fonts | wc -l)
@@ -437,8 +437,7 @@ custom_menu() {
 apply_font() {
 #  nofont=$(find $MIRROR/system/fonts -maxdepth 1 -type f -name "*ockScreen*.ttf" -o -name "*otoSerif*.ttf" -o -name "*roidsans*.ttf" -o -name "*ancing*.ttf" -o -name "*ndroidClock*.ttf" -o -name "*ont*.ttf" -o -name "*omingSoon*.ttf" -o -name "*utiveMono*.ttf" -o -name "*arroisGothic*.ttf" | sed 's#.*/##' | sort -r)
 choice4=$(ls $MIRROR/system/fonts | wc -l)
-choice2="$(grep -w $choice $MODPATH/fontlist.txt | tr -d '[ ]' | tr -d $choice | tr -d ' ')"  
-#choice3=$(find $FCDIR/Fonts/$choice2/system/fonts -maxdepth 1 -type f -name "*.ttf" -o -name "*.ttc" -prune | sed 's#.*/##' | sort -r)
+choice2="$(grep -w $choice $MODPATH/fontlist.txt | tr -d '[ ]' | tr -d $choice | tr -d ' ')"  choice3=$(find $FCDIR/Fonts/$choice2/system/fonts -maxdepth 1 -type f -name "*.ttf" -o -name "*.ttc" -prune | sed 's#.*/##' | sort -r)
 
 echo -e "${B}Applying Font. Please Wait...${N}"
 sleep 2
