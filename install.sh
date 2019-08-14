@@ -29,7 +29,7 @@ SKIPMOUNT=false
 PROPFILE=false
 
 # Set to true if you need post-fs-data script
-POSTFSDATA=false
+POSTFSDATA=true
 
 # Set to true if you need late_start service script
 LATESTARTSERVICE=false
@@ -133,7 +133,7 @@ on_install() {
   # The following is the default implementation: extract $ZIPFILE/system to $MODPATH
   # Extend/change the logic to whatever you want
   ui_print "- Extracting module files"
-#  unzip -o "$ZIPFILE" 'Fontchanger-functions.sh' 'system/*' -d $MODPATH >&2
+#  unzip -o "$ZIPFILE" 'system/*' -d $MODPATH >&2
   unzip -o "$ZIPFILE" "$MODID/*" -d ${MODPATH%/*}/ >&2
   chmod 0755 $TMPDIR/busybox-$ARCH32
   ui_print " [-] Checking For Internet Connection... [-] "
@@ -172,25 +172,9 @@ if $BOOTMODE; then
 else
   cancel " [-] TWRP Install NOT Supported. Please Install Booted with Internet Connection... [-] "
 fi
-  imageless_magisk || sed -i "s|MODPATH=/data/adb/modules|MODPATH=/sbin/.magisk/img|" $MODPATH/font_changer.sh
+  imageless_magisk || sed -i "s|MODPATH=/data/adb/modules/$MODID|MODPATH=/sbin/.magisk/img/$MODID|" $TMPDIR/font_changer.sh
   cp -f $TMPDIR/curl-$ARCH32 $MODPATH/curl
   cp -f $TMPDIR/sleep-$ARCH32 $MODPATH/sleep
-#  mv $MODPATH/system/bin/font_changer.sh $MODPATH/system/bin/font_changer
-  # prepare working directory
-  mkdir -p /sbin/.${MODID}
-  [ -h /sbin/.${MODID}/${MODID} ] && rm /sbin/.${MODID}/${MODID} || rm -rf /sbin/.${MODID}/${MODID} 2>/dev/null
-  [ ${MAGISK_VER_CODE:-18200} -gt 18100 ] && ln -s ${0%/*} /sbin/.${MODID}/${MODID} || cp -a ${0%/*} /sbin/.${MODID}/${MODID}
-  ln -fs /sbin/.${MODID}/${MODID}/font_changer.sh /sbin/font_changer
-  ln -fs /sbin/.${MODID}/${MODID}/${MODID}-functions.sh /sbin/${MODID}-functions.sh
-
-  # fix termux's PATH
-  termuxSu=/data/data/com.termux/files/usr/bin/su
-  if [ -f $termuxSu ] && grep -q 'PATH=.*/sbin/su' $termuxSu; then
-    sed '\|PATH=|s|/sbin/su|/sbin|' $termuxSu > $termuxSu.tmp
-    cat $termuxSu.tmp > $termuxSu
-    rm $termuxSu.tmp
-  fi
-  unset file termuxSu
 }
 
 # Only some special files require specific permissions
@@ -201,10 +185,12 @@ fi
 set_permissions() {
   # The following is the default rule, DO NOT remove
   set_perm_recursive $MODPATH 0 0 0755 0644
-  set_perm $MODPATH/${MODID}-functions.sh  0  0  0755
-  set_perm $MODPATH/font_changer.sh 0 0 0755
   set_perm $MODPATH/curl 0 0 0755
   set_perm $MODPATH/sleep 0 0 0755
+
+  for file in $MODPATH/*.sh; do
+    [ -f $file ] && set_perm $file  0  0  0700
+  done
 
   ui_print " "
   ui_print " [-] After Installing type su then hit enter and type font_changer in terminal [-] "
@@ -257,3 +243,40 @@ rm -f $TMPDIR/google.idx
 }
 
 get_ver() { sed -n 's/^name=//p' ${1}; }
+
+set_vars() {
+if [ -d /cache ]; then CACHELOC=/cache; else CACHELOC=/data/cache; fi
+  MODTITLE=$(grep_prop name $TMPDIR/module.prop)
+  VER=$(grep_prop version $TMPDIR/module.prop)
+	AUTHOR=$(grep_prop author $TMPDIR/module.prop)
+	INSTLOG=$CACHELOC/dns_switch_install.log
+  MAGISK_VER="$(grep MAGISK_VER_CODE /data/adb/magisk/util_functions.sh)"
+}
+
+log_handler() {
+  echo "" >> $INSTLOG 2>&1
+  echo -e "$(date +"%m-%d-%Y %H:%M:%S") - $1" >> $INSTLOG 2>&1
+}
+
+log_start() {
+	if [ -f "$INSTLOG" ]; then
+    truncate -s 0 $INSTLOG
+  else
+    touch $INSTLOG
+  fi
+  echo " " >> $INSTLOG 2>&1
+  echo "    *******************************************" >> $INSTLOG 2>&1
+  echo "    *                $MODTITLE             *" >> $INSTLOG 2>&1
+  echo "    *******************************************" >> $INSTLOG 2>&1
+  echo "    *                  v$VER                   *" >> $INSTLOG 2>&1
+  echo "    *******************************************" >> $INSTLOG 2>&1
+  echo "    *              By : $AUTHOR            *" >> $INSTLOG 2>&1
+  echo "    *******************************************" >> $INSTLOG 2>&1
+  echo " " >> $INSTLOG 2>&1
+  log_handler "Starting module installation script"
+}
+
+log_print() {
+  ui_print "$1"
+  log_handler "$1"
+}

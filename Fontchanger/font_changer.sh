@@ -4,6 +4,7 @@
 # Modified by @JohnFawkes - Telegram
 # Help from @Zackptg5
 # Variables
+
 OLDPATH=$PATH
 MODID=Fontchanger
 MODPATH=/data/adb/modules/$MODID
@@ -17,7 +18,7 @@ if [ -d /cache ]; then CACHELOC=/cache; else CACHELOC=/data/cache; fi
 CFONT=$MODPATH/currentfont.txt
 CEMOJI=$MODPATH/currentemoji.txt
 MIRROR=/sbin/.magisk/mirror
-TMPDIR=/dev/tmp
+
 alias curl=$MODPATH/curl
 alias sleep=$MODPATH/sleep
 alias xmlstarlet=$MODPATH/xmlstarlet
@@ -40,15 +41,24 @@ else
   echo "! Can't find magisk util_functions! Aborting!"; exit 1
 fi
 
+# Load Needed Functions
+if [ -f $MODPATH/${MODID}-functions.sh ]; then
+  . $MODPATH/${MODID}-functions.sh
+else
+  echo "! Can't find functions script! Aborting!"; exit 1
+fi
+
+log_start
+
 #=========================== Set Log Files
 #mount -o remount,rw $CACHELOC 2>/dev/null
 #mount -o rw,remount $CACHELOC 2>/dev/null
 # > Logs should go in this file
-LOG=$MODPATH/$MODID.log
-oldLOG=$MODPATH/$MODID-old.log
+LOG=$MODPATH/${MODID}.log
+oldLOG=$MODPATH/${MODID}-old.log
 # > Verbose output goes here
-VERLOG=$MODPATH/$MODID-verbose.log
-oldVERLOG=$MODPATH/$MODID-verbose-old.log
+VERLOG=$MODPATH/${MODID}-verbose.log
+oldVERLOG=$MODPATH/${MODID}-verbose-old.log
 
 # Start Logging verbosely
 mv -f $VERLOG $oldVERLOG 2>/dev/null
@@ -282,42 +292,58 @@ e_spinner() {
 # test_connection
 # tests if there's internet connection
 test_connection() {
-  ui_print "Testing internet connection "
-  ping -q -c 1 -W 1 google.com >/dev/null 2>&1 && echo "- Internet Detected" || { echo "Error, No Internet Connection"; false; }
+  ui_print " [-] Testing internet connection [-] "
+  ping -q -c 1 -W 1 google.com >/dev/null 2>&1 && ui_print " [-] Internet Detected [-] "  && CON=true || { abort " [-] Error, No Internet Connection [-] ";NCON=true; }
 }
 
 test_connection2() {
-case "$(curl -s --max-time 2 -I http://google.com | sed 's/^[^ ]*  *\([0-9]\).*/\1/; 1q')" in
-  [23]) echo "HTTP connectivity is up"
-  ;;
-  5) echo "The web proxy won't let us through" 
-  false
-  ;;
-  *) abort "The network is down or very slow"
-  ;;
+  case "$(curl -s --max-time 2 -I http://google.com | sed 's/^[^ ]*  *\([0-9]\).*/\1/; 1q')" in
+  [23]) ui_print " [-] HTTP connectivity is up [-] "
+    CON2=true
+    ;;
+  5) ui_print " [!] The web proxy won't let us through [!] "
+    NCON2=true
+    ;;
+  *) ui_print " [!] The network is down or very slow [!] "
+    NCON2=true
+    ;;
 esac
 }
 
 test_connection3() {
-  wget -q --tries=5 --timeout=10 http://www.google.com -O $CACHELOC/google.idx >/dev/null 2>&1
-if [ ! -s $CACHELOC/google.idx ]; then
-  ui_print " [!] Not Connected..[!]"
-  false
+  wget -q --tries=5 --timeout=10 http://www.google.com -O $MODPATH/google.idx >/dev/null 2>&1
+if [ ! -s $MODPATH/google.idx ]
+then
+    ui_print " [!] Not Connected... [!] "
+    NCON3=true
 else
-  ui_print " [-] Connected..!"
+    ui_print " [-] Connected..! [-] "
+    CON3=true
 fi
-rm -f $CACHELOC/google.idx
+rm -f $MODPATH/google.idx
 }
 
-# Log files will be uploaded to logs.pix3lify.com
+# Log files will be uploaded to termbin.com
+# Logs included: VERLOG LOG oldVERLOG oldLOG
 upload_logs() {
-  test_connection
-  [ $? -ne 0 ] && exit
-  logup=none;
-  echo "Uploading logs"
-  [ -s $XZLOG ] && logup=$(curl -T $XZLOG http://john-fawkes.com/submit)
-  echo "$MODEL ($DEVICE) API $API\n$ROM\n$ID\n
-  Log:   $logup"
+  $BBok && {
+    test_connection3
+    [ $CON3 ] || test_connection2
+    [ $CON2 ] || test_connection
+    if [ $CON ] || [ $CON2 ] || [ $CON3 ]; then
+      echo "Uploading logs"
+      [ -s $VERLOG ] && verUp=$(cat $VERLOG | nc termbin.com 9999) || verUp=none
+      [ -s $oldVERLOG ] && oldverUp=$(cat $oldVERLOG | nc termbin.com 9999) || oldverUp=none
+      [ -s $LOG ] && logUp=$(cat $LOG | nc termbin.com 9999) || logUp=none
+      [ -s $oldLOG ] && oldlogUp=$(cat $oldLOG | nc termbin.com 9999) || oldlogUp=none
+      echo -n "Link: "
+      echo "$MODEL ($DEVICE) API $API\n$ROM\n$ID\n
+      O_Verbose: $oldverUp
+      Verbose:   $verUp
+      O_Log: $oldlogUp
+      Log:   $logUp" | nc termbin.com 9999
+    fi
+  } || echo "Busybox not found!"
   exit
 }
 
@@ -355,12 +381,7 @@ mod_head() {
 # > You can add functions, variables & etc.
 # > Rather than editing the default vars above.
 
-# Load Needed Functions
-if [ -f $MODPATH/${MODID}-functions.sh ]; then
-  . $MODPATH/${MODID}-functions.sh
-else
-  echo "! Can't find functions script! Aborting!"; exit 1
-fi
+
 
 #######################################################################################################
 #                                        MENU                                                         #
