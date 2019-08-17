@@ -13,6 +13,8 @@ cat $1 | grep $2 | sed "s|.*${2}||" | sed 's|"||g'
 fi
 }
 
+DATE=$(date +'%m.%d.%Y')
+
 VER=$(grep "version=" module.prop | sed 's|.*=||' | sed 's|-.*||')
 #VERCODE=$(grep "versionCode=" module.prop | sed 's|.*=||' | sed 's|-.*||')
 MODID=$(grep "id=" module.prop | sed 's|.*=||' | sed 's|-.*||')
@@ -38,6 +40,6 @@ fi
 
 read -r choice
 
-zip -r9v _builds/"$MODID-$choice".zip \
+zip -r9v _builds/"$MODID-$DATE$choice2".zip \
   * .gitattributes .gitignore \
   -x _\*/\* | grep .. && echo

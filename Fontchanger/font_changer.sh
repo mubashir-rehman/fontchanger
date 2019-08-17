@@ -4,6 +4,7 @@
 # Modified by @JohnFawkes - Telegram
 # Help from @Zackptg5
 # Variables
+
 OLDPATH=$PATH
 MODID=Fontchanger
 MODPATH=/data/adb/modules/$MODID
@@ -17,7 +18,7 @@ if [ -d /cache ]; then CACHELOC=/cache; else CACHELOC=/data/cache; fi
 CFONT=$MODPATH/currentfont.txt
 CEMOJI=$MODPATH/currentemoji.txt
 MIRROR=/sbin/.magisk/mirror
-TMPDIR=/dev/tmp
+
 alias curl=$MODPATH/curl
 alias sleep=$MODPATH/sleep
 alias xmlstarlet=$MODPATH/xmlstarlet
@@ -40,15 +41,24 @@ else
   echo "! Can't find magisk util_functions! Aborting!"; exit 1
 fi
 
+# Load Needed Functions
+if [ -f $MODPATH/${MODID}-functions.sh ]; then
+  . $MODPATH/${MODID}-functions.sh
+else
+  echo "! Can't find functions script! Aborting!"; exit 1
+fi
+
 #=========================== Set Log Files
 #mount -o remount,rw $CACHELOC 2>/dev/null
 #mount -o rw,remount $CACHELOC 2>/dev/null
 # > Logs should go in this file
-LOG=$MODPATH/$MODID.log
-oldLOG=$MODPATH/$MODID-old.log
+LOG=$MODPATH/${MODID}.log
+oldLOG=$MODPATH/${MODID}-old.log
 # > Verbose output goes here
-VERLOG=$MODPATH/$MODID-verbose.log
-oldVERLOG=$MODPATH/$MODID-verbose-old.log
+VERLOG=$MODPATH/${MODID}-verbose.log
+oldVERLOG=$MODPATH/${MODID}-verbose-old.log
+
+log_start
 
 # Start Logging verbosely
 mv -f $VERLOG $oldVERLOG 2>/dev/null
@@ -282,42 +292,58 @@ e_spinner() {
 # test_connection
 # tests if there's internet connection
 test_connection() {
-  ui_print "Testing internet connection "
-  ping -q -c 1 -W 1 google.com >/dev/null 2>&1 && echo "- Internet Detected" || { echo "Error, No Internet Connection"; false; }
+  ui_print " [-] Testing internet connection [-] "
+  ping -q -c 1 -W 1 google.com >/dev/null 2>&1 && ui_print " [-] Internet Detected [-] "  && CON=true || { abort " [-] Error, No Internet Connection [-] ";NCON=true; }
 }
 
 test_connection2() {
-case "$(curl -s --max-time 2 -I http://google.com | sed 's/^[^ ]*  *\([0-9]\).*/\1/; 1q')" in
-  [23]) echo "HTTP connectivity is up"
-  ;;
-  5) echo "The web proxy won't let us through" 
-  false
-  ;;
-  *) abort "The network is down or very slow"
-  ;;
+  case "$(curl -s --max-time 2 -I http://google.com | sed 's/^[^ ]*  *\([0-9]\).*/\1/; 1q')" in
+  [23]) ui_print " [-] HTTP connectivity is up [-] "
+    CON2=true
+    ;;
+  5) ui_print " [!] The web proxy won't let us through [!] "
+    NCON2=true
+    ;;
+  *) ui_print " [!] The network is down or very slow [!] "
+    NCON2=true
+    ;;
 esac
 }
 
 test_connection3() {
-  wget -q --tries=5 --timeout=10 http://www.google.com -O $CACHELOC/google.idx >/dev/null 2>&1
-if [ ! -s $CACHELOC/google.idx ]; then
-  ui_print " [!] Not Connected..[!]"
-  false
+  wget -q --tries=5 --timeout=10 http://www.google.com -O $MODPATH/google.idx >/dev/null 2>&1
+if [ ! -s $MODPATH/google.idx ]
+then
+    ui_print " [!] Not Connected... [!] "
+    NCON3=true
 else
-  ui_print " [-] Connected..!"
+    ui_print " [-] Connected..! [-] "
+    CON3=true
 fi
-rm -f $CACHELOC/google.idx
+rm -f $MODPATH/google.idx
 }
 
-# Log files will be uploaded to logs.pix3lify.com
+# Log files will be uploaded to termbin.com
+# Logs included: VERLOG LOG oldVERLOG oldLOG
 upload_logs() {
-  test_connection
-  [ $? -ne 0 ] && exit
-  logup=none;
-  echo "Uploading logs"
-  [ -s $XZLOG ] && logup=$(curl -T $XZLOG http://john-fawkes.com/submit)
-  echo "$MODEL ($DEVICE) API $API\n$ROM\n$ID\n
-  Log:   $logup"
+  $BBok && {
+    test_connection3
+    [ $CON3 ] || test_connection2
+    [ $CON2 ] || test_connection
+    if [ $CON ] || [ $CON2 ] || [ $CON3 ]; then
+      echo "Uploading logs"
+      [ -s $VERLOG ] && verUp=$(cat $VERLOG | nc termbin.com 9999) || verUp=none
+      [ -s $oldVERLOG ] && oldverUp=$(cat $oldVERLOG | nc termbin.com 9999) || oldverUp=none
+      [ -s $LOG ] && logUp=$(cat $LOG | nc termbin.com 9999) || logUp=none
+      [ -s $oldLOG ] && oldlogUp=$(cat $oldLOG | nc termbin.com 9999) || oldlogUp=none
+      echo -n "Link: "
+      echo "$MODEL ($DEVICE) API $API\n$ROM\n$ID\n
+      O_Verbose: $oldverUp
+      Verbose:   $verUp
+      O_Log: $oldlogUp
+      Log:   $logUp" | nc termbin.com 9999
+    fi
+  } || echo "Busybox not found!"
   exit
 }
 
@@ -355,12 +381,7 @@ mod_head() {
 # > You can add functions, variables & etc.
 # > Rather than editing the default vars above.
 
-# Load Needed Functions
-if [ -f $MODPATH/${MODID}-functions.sh ]; then
-  . $MODPATH/${MODID}-functions.sh
-else
-  echo "! Can't find functions script! Aborting!"; exit 1
-fi
+
 
 #######################################################################################################
 #                                        MENU                                                         #
@@ -400,13 +421,17 @@ echo -e "${W}[1]${N} ${G} - Choose From Over 200 Fonts${N}"
 echo " "
 echo -e "${W}[2]${N} ${G} - List Fonts in Folder (Custom)${N}"
 echo " "
-echo -e "${W}[3]${N} ${G} - Change to Stock Font${N}"
+echo -e "${W}[3]${N} ${G} - Change to Stock Font or Emoji${N}"
 echo " "
 echo -e "${W}[4]${N} ${G} - Change Emojis${N}"
 echo " "
 echo -e "${W}[5]${N} ${G} - How to Set Up the Font Folder${N}"
 echo " "
-#echo -e "${W}[6]${N} ${G} - Take Logs${N}"
+echo -e "${W}[6]${N} ${G} - Help (Options)${N}"
+echo " "
+echo -e "${W}[7]${N} ${G} - Update lists for Emojis and Fonts${N}"
+echo " "
+#echo -e "${W}[8]${N} ${G} - Take Logs${N}"
 #echo " "
 echo -e "${R}[Q] - Quit${N}"
 echo " "
@@ -420,16 +445,22 @@ read -r choice
     2) echo "${G}[-] Custom Font Menu Selected...${N}"
       custom_menu
       ;;
-    3) echo "${B}[-] Stock Font Menu Selected...${N}"
+    3) echo "${B}[-] Stock Font/Emoji Menu Selected...${N}"
       default_menu
       ;;
     4) echo "${R}[-] Emoji Menu Selected...${N}"
       emoji_menu
       ;;
-    5) echo "${C}[-] Help Selected...${N}"
+    5) echo "${C}[-] Custom Setup Help Selected...${N}"
+      help_custom
+      ;;
+    6) echo "${B}[-] Option Help Selected...${N}"
       help
       ;;
-#    6) log_print " Collecting logs and creating archive "
+    7) echo "${Y}[-] Update Lists of Emojis/Fonts Selected..."
+      update_lists
+      ;;
+#    8) log_print " Collecting logs and creating archive "
 #      magisk_version
 #      collect_logs
 #      upload_logs
@@ -452,9 +483,6 @@ apply_font_shortcut() {
 echo -e "${B}Applying Font. Please Wait...${N}"
 sleep 2
 choice2="$(grep -w $i $MODPATH/fontlist.txt | tr -d '[ ]' | tr -d '[0-9]' | tr -d ' ')"
-choice3=(
-$(find $FCDIR/Fonts/$choice2/system/fonts -maxdepth 1 -type f -name "*.ttf" -o -name "*.ttc" -prune | sed 's#.*/##'| sort -r)
-)
 if [ -f "$MODPATH/system/fonts/*Emoji*.ttf" ]; then
   for i in $MODPATH/system/fonts/*Emoji*.ttf; do
     mv -f $i $MODPATH
@@ -462,37 +490,9 @@ if [ -f "$MODPATH/system/fonts/*Emoji*.ttf" ]; then
 fi
 rm -rf $MODPATH/system/fonts > /dev/null 2>&1
 mkdir -p $FCDIR/Fonts/$choice2
-curl -k -o "$FCDIR/Fonts/$choice2.zip" https://john-fawkes.com/Downloads/$choice2.zip
+[ -e $FCDIR/Fonts/$choice2.zip ] || curl -k -o "$FCDIR/Fonts/$choice2.zip" https://john-fawkes.com/Downloads/$choice2.zip
 unzip -o "$FCDIR/Fonts/$choice2.zip" 'system/*' -d $FCDIR/Fonts/$choice2 >&2 
 mkdir -p $MODPATH/system/fonts
-XML=$MODPATH/system/etc/fonts.xml
-if [ -f $XML ]; then
-  rm -rf $XML
-  touch $XML
-else
-  touch $XML
-fi
-truncate -s 0 $XML
-  echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
-<!--
-	Generated by $MODTITLE by $AUTHOR
--->
-<familyset version=\"22\">
-    <family name=\"sans-serif\">" >> $XML
-for i in ${choice3[@]}; do
-  echo "        <font weight=\"400\" style=\"normal\">\"$i\"</font>" >> $XML
-done
-echo "    </family>
-    <alias name=\"sans-serif-thin\" to=\"sans-serif\" weight=\"100\" />
-    <alias name=\"sans-serif-light\" to=\"sans-serif\" weight=\"300\" />
-    <alias name=\"sans-serif-medium\" to=\"sans-serif\" weight=\"500\" />
-    <alias name=\"sans-serif-black\" to=\"sans-serif\" weight=\"900\" />
-    <alias name=\"arial\" to=\"sans-serif\" />
-    <alias name=\"helvetica\" to=\"sans-serif\" />
-    <alias name=\"tahoma\" to=\"sans-serif\" />
-    <alias name=\"verdana\" to=\"sans-serif\" />
-    <alias name=\"sans-serif-condensed\" to=\"sans-serif\" />
-</familyset>" >> $XML
 if [ -f "$MODPATH/*Emoji*.ttf" ]; then
   for i in $MODPATH/*Emoji*.ttf; do
     mv -f $i $MODPATH/system/fonts
@@ -514,59 +514,42 @@ fi
 
 apply_custom_font_shortcut() {
 choice2="$(grep -w $i $MODPATH/customfontlist.txt | tr -d '[ ]' | tr -d '[0-9]' | tr -d ' ')"
-choice3=(
-$(find $FCDIR/Fonts/Custom/$choice2 -maxdepth 1 -type f -name "*.ttf" -o -name "*.ttc" -prune | sed 's#.*/##'| sort -r)
-)
-choice4=$(ls $MIRROR/system/fonts | wc -l)
-echo -e "${B}Applying Custom Font. Please Wait...${N}"
-sleep 2
-if [ -f "$MODPATH/system/fonts/*Emoji*.ttf" ]; then
-  for i in $MODPATH/system/fonts/*Emoji*.ttf; do
-    mv -f $i $MODPATH
-  done
-fi
-rm -rf $MODPATH/system/fonts > /dev/null 2>&1
-mkdir -p $MODPATH/system/fonts > /dev/null 2>&1
-touch $MODPATH/system/etc/fonts.xml
-XML=$MODPATH/system/etc/fonts.xml
-if [ -f $XML ]; then
-  rm -rf $XML
-  touch $XML
+cusfont=$(cat $MODPATH/listforcustom.txt)
+if [ -e $FCDIR/dump.txt ]; then
+  truncate -s 0 $FCDIR/dump.txt
 else
-  touch $XML
+  touch $FCDIR/dump.txt
 fi
-#sed -i "s|<family name=".*"|<family name=\"$choice2\">|1" $XML
-truncate -s 0 $XML
-  echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
-<!--
-	Generated by $MODTITLE by $AUTHOR
--->
-<familyset version=\"22\">
-    <family name=\"sans-serif\">" >> $XML
-for i in ${choice3[@]}; do
-  echo "        <font weight=\"400\" style=\"normal\">\"$i\"</font>" >> $XML
+for i in ${cusfont[@]} ; do
+  if [ -e $FCDIR/Fonts/Custom/$choice2/$i ]; then
+    echo "$i found" >> $FCDIR/dump.txt && echo "${B}$i Found${N}"
+  fi
+  if [ ! -e $FCDIR/Fonts/Custom/$choice2/$i ]; then
+    echo "$i NOT FOUND" >> $FCDIR/dump.txt && echo "${R}$i NOT FOUND${N}"
+  fi
 done
-echo "    </family>
-    <alias name=\"sans-serif-thin\" to=\"sans-serif\" weight=\"100\" />
-    <alias name=\"sans-serif-light\" to=\"sans-serif\" weight=\"300\" />
-    <alias name=\"sans-serif-medium\" to=\"sans-serif\" weight=\"500\" />
-    <alias name=\"sans-serif-black\" to=\"sans-serif\" weight=\"900\" />
-    <alias name=\"arial\" to=\"sans-serif\" />
-    <alias name=\"helvetica\" to=\"sans-serif\" />
-    <alias name=\"tahoma\" to=\"sans-serif\" />
-    <alias name=\"verdana\" to=\"sans-serif\" />
-    <alias name=\"sans-serif-condensed\" to=\"sans-serif\" />
-</familyset>" >> $XML
-if [ -f "$MODPATH/*Emoji*.ttf" ]; then
-  for i in $MODPATH/*Emoji*.ttf; do
-    mv -f $i $MODPATH/system/fonts
-  done
+if grep -wq "$i NOT FOUND" $FCDIR/dump.txt; then
+  abort "${R}Script Will Not Continue Until All ttf Files Exist!${N}"
 fi
-cp -f $FCDIR/Fonts/Custom/$choice2/* $MODPATH/system/fonts > /dev/null 2>&1
-set_perm_recursive $MODPATH/system/fonts 0 0 0755 0644 > /dev/null 2>&1
+PASSED=true
+  for i in $MODPATH/system/fonts/*Emoji*.ttf; do
+    if [ -e $i ]; then
+      mv -f $i $MODPATH
+    fi
+  done
+rm -rf $MODPATH/system/fonts >/dev/null 2>&1
+mkdir -p $MODPATH/system/fonts >/dev/null 2>&1
+  for i in $MODPATH/*Emoji*.ttf; do
+    if [ -e $i ]; then
+      mv -f $i $MODPATH/system/fonts
+    fi
+  done
+cp -f $FCDIR/Fonts/Custom/$choice2/* $MODPATH/system/fonts/
+set_perm_recursive $MODPATH/system/fonts 0 0 0755 0644 >/dev/null 2>&1
+[ -f $CFONT ] || touch $CFONT
 truncate -s 0 $CFONT
 echo -n "CURRENT=$choice2" >> $CFONT
-if [ -d "$FCDIR/Fonts/Custom/$choice2.zip" ] && [ -d $MODPATH/system/fonts ]; then
+if [ $PASSED == true ] && [ -d $MODPATH/system/fonts ]; then
   font_reboot_menu
 else
   echo -e "${R}[!] FONT WAS NOT APPLIED [!]${N}"
@@ -616,6 +599,8 @@ case "$1" in
     fi
 	    echo "$div"
 	  exit;;
+  -u|--update) shift
+    update_lists;;
 esac
 
 menu
