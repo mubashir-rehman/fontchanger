@@ -34,12 +34,12 @@ mkdir -p _builds
 
 if [[ ${1:-x} != f ]]; then
   echo "Downloading latest update-binary..."
-  curl -#L https://raw.githubusercontent.com/topjohnwu/Magisk/master/scripts/module_installer.sh > _builds/update-binary \
+  curl -L https://raw.githubusercontent.com/topjohnwu/Magisk/master/scripts/module_installer.sh > _builds/update-binary \
     && mv -f _builds/update-binary META-INF/com/google/android/
 fi
 
 read -r choice
 
-zip -r9v _builds/"$MODID-$DATE$choice".zip \
+zip -r9v _builds/"$MODID-$VER-$DATE$choice".zip \
   * .gitattributes .gitignore \
-  -x _\*/\* | grep .. && echo
+  -x _\*/\* Todo.txt build.sh build.bat check_syntax.sh fonts-list.txt | grep .. && echo
