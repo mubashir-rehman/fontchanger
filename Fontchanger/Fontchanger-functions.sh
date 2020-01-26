@@ -78,6 +78,9 @@ if [ $device = "lge" ]; then
     cp -f $MODPATH/system/fonts/Roboto-Regular.ttf $MODPATH/system/fonts/LG_Number_Roboto_Regular.ttf
     cp -f $MODPATH/system/fonts/Roboto-Thin.ttf $MODPATH/system/fonts/LG_Number_Roboto_Thin_New.ttf
     cp -f $MODPATH/system/fonts/Roboto-Thin.ttf $MODPATH/system/fonts/LG_Number_Roboto_Thin.ttf
+    cp -f $MODPATH/system/fonts/Roboto-Light.ttf $MODPATH/system/fonts/LG_SlimNumber-Light.ttf
+    cp -f $MODPATH/system/fonts/Roboto-Regular.ttf $MODPATH/system/fonts/LG_SlimNumber-Regular.ttf
+    cp -f $MODPATH/system/fonts/Roboto-Thin.ttf $MODPATH/system/fonts/LG_SlimNumber-Thin.ttf
   elif [ -d $MODPATH/system/product/fonts ]; then
     cp -f $MODPATH/system/product/fonts/Roboto-Bold.ttf $MODPATH/system/product/fonts/LG_Number_Roboto_Bold_New.ttf
     cp -f $MODPATH/system/product/fonts/Roboto-Bold.ttf $MODPATH/system/product/fonts/LG_Number_Roboto_Bold.ttf
@@ -85,6 +88,9 @@ if [ $device = "lge" ]; then
     cp -f $MODPATH/system/product/fonts/Roboto-Regular.ttf $MODPATH/system/product/fonts/LG_Number_Roboto_Regular.ttf
     cp -f $MODPATH/system/product/fonts/Roboto-Thin.ttf $MODPATH/system/product/fonts/LG_Number_Roboto_Thin_New.ttf
     cp -f $MODPATH/system/product/fonts/Roboto-Thin.ttf $MODPATH/system/product/fonts/LG_Number_Roboto_Thin.ttf
+    cp -f $MODPATH/system/fonts/Roboto-Light.ttf $MODPATH/system/fonts/LG_SlimNumber-Light.ttf
+    cp -f $MODPATH/system/fonts/Roboto-Regular.ttf $MODPATH/system/fonts/LG_SlimNumber-Regular.ttf
+    cp -f $MODPATH/system/fonts/Roboto-Thin.ttf $MODPATH/system/fonts/LG_SlimNumber-Thin.ttf
   elif [ -d $MODPATH/product/fonts ]; then
     cp -f $MODPATH/product/fonts/Roboto-Bold.ttf $MODPATH/product/fonts/LG_Number_Roboto_Bold_New.ttf
     cp -f $MODPATH/product/fonts/Roboto-Bold.ttf $MODPATH/product/fonts/LG_Number_Roboto_Bold.ttf
@@ -92,6 +98,9 @@ if [ $device = "lge" ]; then
     cp -f $MODPATH/product/fonts/Roboto-Regular.ttf $MODPATH/product/fonts/LG_Number_Roboto_Regular.ttf
     cp -f $MODPATH/product/fonts/Roboto-Thin.ttf $MODPATH/product/fonts/LG_Number_Roboto_Thin_New.ttf
     cp -f $MODPATH/product/fonts/Roboto-Thin.ttf $MODPATH/product/fonts/LG_Number_Roboto_Thin.ttf
+    cp -f $MODPATH/system/fonts/Roboto-Light.ttf $MODPATH/system/fonts/LG_SlimNumber-Light.ttf
+    cp -f $MODPATH/system/fonts/Roboto-Regular.ttf $MODPATH/system/fonts/LG_SlimNumber-Regular.ttf
+    cp -f $MODPATH/system/fonts/Roboto-Thin.ttf $MODPATH/system/fonts/LG_SlimNumber-Thin.ttf
   fi
 fi
 }
