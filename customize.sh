@@ -32,7 +32,7 @@ set_permissions() {
   ui_print " [-] After Installing type su then hit enter and type font_changer in terminal [-] "
   ui_print " [-] Then Choose Option 4 to Read the How-to on How to Set up your Custom Fonts [-] "
   sleep 3
-  set +x
+#  set +x
 }
 
 exxit() {
@@ -43,43 +43,24 @@ exxit() {
 
 test_connection() {
   ui_print " [-] Testing internet connection [-] "
-  $TMPDIR/busybox-$ARCH32 ping -q -c 1 -W 1 google.com >/dev/null 2>&1 && ui_print " [-] Internet Detected [-] "; CON1=true; CON2=false; CON3=false || { exxit " [-] Error, No Internet Connection [-] "; CON=false; CON2=false; CON3=false; }
+  $TMPDIR/busybox-$ARCH32 ping -q -c 1 -W 1 google.com >/dev/null 2>&1 && ui_print " [-] Internet Detected [-] "; CON1=true; CON2=true || { exxit " [-] Error, No Internet Connection [-] "; CON=false; CON2=false; }
 }
 
 test_connection2() {
   case "$($TMPDIR/curl-$ARCH32 -s --max-time 2 -I http://google.com | sed 's/^[^ ]*  *\([0-9]\).*/\1/; 1q')" in
   [23]) ui_print " [-] HTTP connectivity is up [-] "
-    CON1=false
+    CON1=true
     CON2=true
-    CON3=false
     ;;
   5) ui_print " [!] The web proxy won't let us through [!] "
     CON1=false
     CON2=false
-    CON3=false
     ;;
   *) ui_print " [!] The network is down or very slow [!] "
     CON1=false
     CON2=false
-    CON3=false
     ;;
 esac
-}
-
-test_connection3() {
-  $TMPDIR/busybox-$ARCH32 wget -q --tries=5 --timeout=10 http://www.google.com -O $TMPDIR/google.idx >/dev/null 2>&1
-if [ ! -s $TMPDIR/google.idx ]; then
-  ui_print " [!] Not Connected... [!] "
-  CON1=false
-  CON2=false
-  CON3=false
-else
-  ui_print " [-] Connected..! [-] "
-  CON1=false
-  CON2=false
-  CON3=true
-fi
-rm -f $TMPDIR/google.idx
 }
 
 get_var() { sed -n 's/^name=//p' ${1}; }
@@ -108,6 +89,16 @@ version_changes() {
   ui_print "   - Telegram group: https://t.me/fontchange_magisk"
   ui_print "   - Telegram profile: t.me/johnfawkes/"
   set +euo pipefail
+}
+
+download_files() {
+ui_print " - Downloading needed files"
+wget -O $MODPATH/font_changer.sh https://github.com/johnfawkes/fontchanger-scripts/raw/master/font_changer.sh 2>/dev/null
+wget -O $MODPATH/Fontchanger-functions.sh https://github.com/johnfawkes/fontchanger-scripts/raw/master/Fontchanger-functions.sh 2>/dev/null
+wget -O $MODPATH/listforcustom.txt https://github.com/johnfawkes/fontchanger-scripts/raw/master/listforcustom.txt 2>/dev/null
+#wget -O $MODPATH/service.sh https://github.com/johnfawkes/fontchanger-scripts/raw/master/service.sh 2>/dev/null
+wget -O $MODPATH/uninstall.sh https://github.com/johnfawkes/fontchanger-scripts/raw/master/uninstall.sh 2>/dev/null
+wget -O $MODPATH/fonts-list.txt https://github.com/johnfawkes/fontchanger-scripts/raw/master/fonts-list.txt 2>/dev/null
 }
 
 SKIPUNZIP=1
@@ -160,33 +151,30 @@ if $BOOTMODE; then
     fi
   fi
   ui_print " [-] Extracting module files [-] "
-  unzip -o "$ZIPFILE" "$MODID/*" -d ${MODPATH%/*}/ 2>&1
+#  unzip -o "$ZIPFILE" "$MODID/*" -d ${MODPATH%/*}/ 2>&1																																																																																																
   unzip -o "$ZIPFILE" 'README.md' -d $TMPDIR 2>&1
-  unzip -oj "$ZIPFILE" "tools/*" -d $TMPDIR 2>&1
+  unzip -o "$ZIPFILE" "tools/*" -d $TMPDIR 2>&1
   mkdir -p /storage/emulated/0/Fontchanger/Fonts/Custom 2>&1
   mkdir -p /storage/emulated/0/Fontchanger/Fonts/User 2>&1
   mkdir -p /storage/emulated/0/Fontchanger/Fonts/avfonts 2>&1
   mkdir -p /storage/emulated/0/Fontchanger/Emojis/Custom 2>&1
-  chmod 0755 $TMPDIR/curl-$ARCH32
-  chmod 0755 $TMPDIR/busybox-$ARCH32
+  chmod 0755 $TMPDIR/tools/curl-$ARCH32
+  chmod 0755 $TMPDIR/tools/busybox-$ARCH32
   ui_print " [-] Checking For Internet Connection... [-] "
-  test_connection3
-  if ! "$CON3"; then
-    test_connection2
-    if ! "$CON2"; then
-      test_connection
-    fi
-  fi
-  if "$CON1" || "$CON2" || "$CON3"; then
+  test_connection
+#  [[ "$CON1" == "true" ]] ||  abort " [!] Internet Connection is Needed... [!]"
+  [[ "$CON1" == "true" ]] || test_connection2
+  [[ "$CON2" == "true" ]] || abort " [!] Internet Connection is Needed... [!]"
+  if "$CON1" || "$CON2"; then
     for i in /storage/emulated/0/Fontchanger/*-list.txt; do
       if [ -e $i ]; then
         rm $i 2>&1
       fi
     done
-    $TMPDIR/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
-    $TMPDIR/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/user-fonts-list.txt https://john-fawkes.com/Downloads/userfontlist/user-fonts-list.txt
-    $TMPDIR/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/emojis-list.txt https://john-fawkes.com/Downloads/emojilist/emojis-list.txt
-    $TMPDIR/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/avfonts-list.txt https://john-fawkes.com/Downloads/avfontlist/avfonts-list.txt
+    $TMPDIR/tools/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/fonts-list.txt https://john-fawkes.com/Downloads/fontlist/fonts-list.txt
+    $TMPDIR/tools/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/user-fonts-list.txt https://john-fawkes.com/Downloads/userfontlist/user-fonts-list.txt
+    $TMPDIR/tools/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/emojis-list.txt https://john-fawkes.com/Downloads/emojilist/emojis-list.txt
+    $TMPDIR/tools/curl-$ARCH32 -k -o /storage/emulated/0/Fontchanger/avfonts-list.txt https://john-fawkes.com/Downloads/avfontlist/avfonts-list.txt
     if [ -f /storage/emulated/0/Fontchanger/fonts-list.txt ] && [ -f /storage/emulated/0/Fontchanger/emojis-list.txt ] && [ -f /storage/emulated/0/Fontchanger/user-fonts-list.txt ] && [ -f /storage/emulated/0/Fontchanger/avfonts-list.txt ]; then
       ui_print " [-] All Lists Downloaded Successfully... [-] "
     else
@@ -196,16 +184,25 @@ if $BOOTMODE; then
     exxit " [!] No Internet Detected... [!] " 
   fi
 else
-  exxit " [-] TWRP Install NOT Supported. Please Install Booted with Internet Connection... [-] "
+  ui_print "- Only uninstall is supported in recovery"
+  rm -rf $MODPATH $NVBASE/modules_update/$MODID $TMPDIR 2>/dev/null
+  abort "Uninstalling!"
 fi
-cp -f $TMPDIR/curl-$ARCH32 $MODPATH/curl 2>&1
-cp -f $TMPDIR/sleep-$ARCH32 $MODPATH/sleep 2>&1
-cp -f $TMPDIR/zip-$ARCH32 $MODPATH/zip 2>&1
-cp -f $TMPDIR/bash-$ARCH32 $MODPATH/bash 2>&1
+cp -f $TMPDIR/tools/curl-$ARCH32 $MODPATH/curl 2>&1
+cp -f $TMPDIR/tools/sleep-$ARCH32 $MODPATH/sleep 2>&1
+cp -f $TMPDIR/tools/zip-$ARCH32 $MODPATH/zip 2>&1
+cp -f $TMPDIR/tools/bash-$ARCH32 $MODPATH/bash 2>&1
 if [ -d /data/adb/modules/busybox-ndk ]; then
   ui_print "Busybox Already Installed" 2>&1
 else
-  cp -f $TMPDIR/busybox-$ARCH32 $MODPATH/busybox 2>&1
+  cp -f $TMPDIR/tools/busybox-$ARCH32 $MODPATH/busybox 2>&1
 fi
+download_files
 version_changes
+mkdir -p $MODPATH/system/bin
 set_permissions
+mv $MODPATH/font_changer.sh $MODPATH/system/bin/font_changer
+if [ -d /sbin/.Fontchanger ]; then
+  rm -rf /sbin/.Fontchanger
+fi
+set +x

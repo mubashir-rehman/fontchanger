@@ -96,6 +96,8 @@
 ## Donation
 - If you would like to donate to me you can do so by going to <a href="https://paypal.me/BBarber61">PayPal</a>
 
+- You can also donate monthly by visting <a href="https://github.com/sponsors/JohnFawkes">Github Sponsorship</a>
+
 ## Changelog
 ## v2.8.0.0 - 2.2.2020
 * Readd shortcut options. 
