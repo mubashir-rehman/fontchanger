@@ -21,8 +21,11 @@
   </h3>
 </div>
 
+<div align="center">
+<strong> YOU DO NOT HAVE PERMISSION TO USE, MODIFY OR DISTRIBUTE THIS CODE IN ANY WAY
+
 ## Using The Custom Option
-* Watch the video tutorial at <a href="https://john-fawkes.com/fontchanger.html">Fontchanger Custom Tutorial</a> or <a href="https://www.youtube.com/watch?v=YLUl5X-uVZc">Fontchanger Youtube link</a> to learn how to setup the fonts! This is a 43 minute long video and is very simple to follow but is the only way unfortunately to do the custom option. Hopefully one day I can create an app to make the process a little easier. 
+* CURRENTLY BROKEN
 
 ## Shortcut Options
 
