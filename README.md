@@ -22,7 +22,7 @@
 </div>
 
 <div align="center">
-YOU HAVE PERMISSION TO USE, MODIFY AND DISTRIBUTE THIS CODE IN ANY WAY
+This code is licensed under GNU GPL v3
 
 ## Using The Custom Option
 * CURRENTLY BROKEN
